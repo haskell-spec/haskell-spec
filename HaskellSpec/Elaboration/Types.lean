@@ -4,6 +4,40 @@ import HaskellSpec.Target.Lang
 import HaskellSpec.Environments
 import HaskellSpec.SemanticTypes
 import HaskellSpec.Forall2
+import HaskellSpec.Elaboration.Kinding
+open Kinding
+
+/-
+# Notations
+-/
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《type》" te "," h "⊢" t "፥"  τ "▪" => type te h t τ
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《types》" te "," h "⊢" ts "፥"  τs "▪" => types te h ts τs
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《class》" ce "," te "," h "⊢" cls "፥" Γ "," τ "▪" => classR ce te h cls Γ τ
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《context》" ce "," te "," h "⊢" cx "፥" θ "▪" => context ce te h cx θ
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《sig》" ge "⊢" sign "፥" ve "▪" => sig ge sign ve
+
+set_option quotPrecheck false in
+set_option hygiene false in
+notation  "《sigs》" ge "⊢" sign "፥" ve "▪" => sigs ge sign ve
+
+/-
+# Utilities
+-/
 
 /-- A typename `T` applied to a list of arguments:
 ```text
@@ -18,13 +52,9 @@ def type_apply (T : QType_Name)
   | [] => Source.TypeExpression.typename T
   | (t :: ts) => Source.TypeExpression.app (type_apply T ts) t
 
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《type》" te "," h "⊢" t "፥"  τ "▪" => type te h t τ
-
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《types》" te "," h "⊢" ts "፥"  τs "▪" => types te h ts τs
+/-
+# Judgements
+-/
 
 mutual
   /--
@@ -47,6 +77,16 @@ mutual
       --------------------------------------------------------------------------------------
       《type》⟨te₁,te₂⟩,h ⊢ Source.TypeExpression.typename T ፥ SemTy.TypeS.TypeConstructor χ ▪
 
+      /--
+      There are two complications when checking type synonyms:
+      - Type synonyms always have to be fully applied.
+      - In order to rule out cycles of recursive type synonyms such as
+        ```
+        type T = T
+        ```
+        we use a natural number index `h` in the judgement which must be greater than the number assigned
+        to the type synonym in the context.
+      -/
     | TSYN :
       ⟨T, Env.TE_Item.TypeSynonym χ g αs τ⟩ ∈ te₁ →
       g < h →
@@ -77,15 +117,16 @@ mutual
       《types》te,h ⊢ t :: ts ፥ τ :: τs ▪
 end
 
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《class》" ce "," te "," h "⊢" cls "፥" Γ "," τ "▪" => classR ce te h cls Γ τ
-
 /--
 Cp. Fig 25
 ```text
 CE, TE, h ⊢ class : Γ τ
 ```
+Checking a single typeclass constraint in a qualified type signature.
+These constraints have the general form `C (u t₁ … tₙ)` where `C` is the name
+of a typeclass, `u` is a type variable and `tᵢ` are types.
+An example would be `Num (f Int Int)`.
+
 -/
 inductive classR : Env.CE → Env.TE → Int
                  → Source.ClassAssertion
@@ -93,15 +134,11 @@ inductive classR : Env.CE → Env.TE → Int
                  → SemTy.TypeS
                  → Prop where
   | CLASS :
-    (_, Env.CEEntry.mk Γ h' x C ie) ∈ ce →
+    (C, Env.CEEntry.mk Γ h' x α ie) ∈ ce →
     h' < h →
     《type》te, h'' ⊢ List.foldl Source.TypeExpression.app (Source.TypeExpression.var u) ts ፥ τ ▪ →
     ------------------------------------------------------------------------------------------------
     《class》ce,te,h ⊢ Source.ClassAssertion.mk C u ts ፥ Γ , τ ▪
-
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《context》" ce "," te "," h "⊢" cx "፥" θ "▪" => context ce te h cx θ
 
 /--
 Cp. Fig 25
@@ -116,11 +153,7 @@ inductive context : Env.CE → Env.TE → Int
   | CONTEXT :
     Forall3 class_assertions Γs τs (λ classᵢ Γᵢ τᵢ => 《class》ce,te,h ⊢ classᵢ ፥ Γᵢ ,τᵢ ▪) →
     -----------------------------------------------------------------------------------------
-    《context》ce,te,h ⊢ class_assertions ፥ _ ▪
-
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《sig》" ge "⊢" sign "፥" ve "▪" => sig ge sign ve
+    《context》ce,te,h ⊢ class_assertions ፥ List.zip Γs τs ▪
 
 /--
 Cp. Fig 24
@@ -134,14 +167,14 @@ inductive sig : Env.GE
               → Prop where
   | SIG :
     ke = Env.kindsOf ce te →
-    《type》_,_ ⊢ _ ፥ _ ▪ →
+    MinKindEnv ke_min (λ ke' => 《oplus》ke ⊞ ke' ≡ ke_sum ▪ ∧
+                                《ktype》ke_sum ⊢ t ፥ SemTy.Kind.Star ▪ ∧
+                                 (∀ ca ∈ cx, 《kclassassertion》ke_sum ⊢ ca ▪ )) →
     《context》_,_,_ ⊢ cx ፥ θ ▪ →
+    《type》_,_ ⊢ t ፥ τ ▪ →
+    /- fv(cx) ⊆ fv(t) → -/
     ---------------------------------------------------------
-    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx _) ፥ [⟨v,_⟩] ▪
-
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《sigs》" ge "⊢" sign "፥" ve "▪" => sigs ge sign ve
+    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,_⟩] ▪
 
 /--
 Cp. Fig 24
@@ -153,13 +186,8 @@ inductive sigs : Env.GE
                → List Source.Signature
                → Env.VE
                → Prop where
-  | SIGS_NIL :
-    ----------------------
-    《sigs》ge ⊢ [] ፥ [] ▪
-
-  | SIGS_CONS :
-    《sig》 ge ⊢ s  ፥ ve ▪ →
-    《sigs》ge ⊢ ss ፥ ves ▪ →
-    《oplus》ve ⊞ ves ≡ ve_res ▪ →
-    ------------------------------
-    《sigs》ge ⊢ s :: ss ፥ ve_res ▪
+  | SIGS :
+    Forall2 sgs ves (λ sg ve =>《sig》ge ⊢ sg ፥ ve ▪) →
+    《oplus*》⊞{ ves }≡ ve ▪ →
+    ---------------------------------------------------
+    《sigs》ge ⊢ sgs ፥ ve ▪
