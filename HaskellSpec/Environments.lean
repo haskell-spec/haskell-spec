@@ -320,7 +320,6 @@ def VE : Type :=
 def ops (ve : VE)(Γ : SemTy.SClass_Name) : List QVariable :=
   sorry
 
-
 /-
 ### Kind Environment
 
