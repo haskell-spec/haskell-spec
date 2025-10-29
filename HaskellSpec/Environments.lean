@@ -345,8 +345,14 @@ structure KE where
 
 
 instance ke_oplus : OPlus KE where
-  oplus := sorry
-  oplus_many := sorry
+  oplus ke₁ ke₂ ke₃ :=
+    OPlus.oplus ke₁.ke₁ ke₂.ke₁ ke₃.ke₁ ∧
+    OPlus.oplus ke₁.ke₂ ke₂.ke₂ ke₃.ke₂ ∧
+    OPlus.oplus ke₁.ke₃ ke₂.ke₃ ke₃.ke₃
+  oplus_many kes ke_out :=
+    OPlus.oplus_many (List.map (λ x => x.ke₁) kes) ke_out.ke₁ ∧
+    OPlus.oplus_many (List.map (λ x => x.ke₂) kes) ke_out.ke₂ ∧
+    OPlus.oplus_many (List.map (λ x => x.ke₃) kes) ke_out.ke₃
 
 /--
 ### Source Environment

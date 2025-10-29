@@ -112,8 +112,9 @@ instance decidable_kind_ord {κ₁ κ₂ : SemTy.Kind }: Decidable 《kindord》
   decide_kind_ord κ₁ κ₂
 
 def KindEnvOrdering (ke₁ ke₂ : Env.KE) : Prop :=
-  sorry
-  --∀ x ∈ ke₁, ∃ x' ∈ ke₂, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪
+  (∀ x ∈ ke₁.ke₁, ∃ x' ∈ ke₂.ke₁, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪) ∧
+  (∀ x ∈ ke₁.ke₂, ∃ x' ∈ ke₂.ke₂, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪) ∧
+  (∀ x ∈ ke₁.ke₃, ∃ x' ∈ ke₂.ke₃, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪)
 
 notation  "《kindenvord》" ke₁ "≼" ke₂ "▪" => KindEnvOrdering ke₁ ke₂
 
