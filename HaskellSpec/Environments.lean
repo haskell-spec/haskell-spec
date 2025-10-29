@@ -329,16 +329,24 @@ The kind environment contains information about the kinds of class and type name
 Cp. section 2.7.6
 -/
 
+@[reducible]
 def KE₁ : Type := Env QType_Name SemTy.Kind
 
+@[reducible]
 def KE₂ : Type := Env Type_Variable SemTy.Kind
 
+@[reducible]
 def KE₃ : Type := Env QClassName SemTy.Kind
 
 structure KE where
   ke₁ : KE₁
   ke₂ : KE₂
   ke₃ : KE₃
+
+
+instance ke_oplus : OPlus KE where
+  oplus := sorry
+  oplus_many := sorry
 
 /--
 ### Source Environment
