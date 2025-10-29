@@ -35,34 +35,43 @@ def restrict [BEq name] (env : Env name info) (names : List name) : Env name inf
 def intersect [BEq t] (l l' : List t) : (List t) :=
   List.filter (List.contains l') l
 
+class OPlus (m : Type) where
+  oplus :  m -> m -> m -> Prop
+  oplus_many : List m -> m -> Prop
+
+notation  "《oplus》" e₁ "⊞" e₂ "≡" e₃ "▪"=> OPlus.oplus e₁ e₂ e₃
+notation  "《oplus*》⊞{" es "}≡" e "▪"=> OPlus.oplus_many es e
+
 -- ⊕ from Section 2.7 as a ternary relation
 -- asserts that the environments have no overlapping domains
-inductive oplus : Env k v -> Env k v -> Env k v -> Prop where
+inductive oplus_env : Env k v -> Env k v -> Env k v -> Prop where
 
   | Nil :
     ------------
-    oplus [] E E
+    oplus_env [] E E
 
   | Cons :
     k ∉ dom E₂ →
-    oplus E₁ E₂ E₃ →
+    oplus_env E₁ E₂ E₃ →
     -------------------------------------
-    oplus ((k, v) :: E₁) E₂ ((k, v) :: E₃)
+    oplus_env ((k, v) :: E₁) E₂ ((k, v) :: E₃)
 
-notation  "《oplus》" e₁ "⊞" e₂ "≡" e₃ "▪"=> oplus e₁ e₂ e₃
-
-inductive oplus_many : List (Env k v) → Env k v → Prop where
+inductive oplus_many_env : List (Env k v) → Env k v → Prop where
   | Nil :
     ----------------
-    oplus_many [] []
+    oplus_many_env [] []
 
   | Cons :
-    oplus_many es e' →
-    oplus e e' e'' →
+    oplus_many_env es e' →
+    oplus_env e e' e'' →
     ------------------------
-    oplus_many (e :: es) e''
+    oplus_many_env (e :: es) e''
 
-notation  "《oplus*》⊞{" es "}≡" e "▪"=> oplus_many es e
+
+instance oplus_env_inst : OPlus (Env k v) where
+  oplus := oplus_env
+  oplus_many := oplus_many_env
+
 
 def oplusbar [BEq name] (env env' : Env name info) (_ : (restrict env (dom env') = restrict env' (dom env))) : (Env name info) :=
   List.append env env'
@@ -311,22 +320,39 @@ def VE : Type :=
 def ops (ve : VE)(Γ : SemTy.SClass_Name) : List QVariable :=
   sorry
 
-inductive KE_Name : Type where
-  | T : QType_Name -> KE_Name
-  | u : Type_Variable -> KE_Name
-  | C : QClassName -> KE_Name
-  deriving BEq
 
-/--
+/-
 ### Kind Environment
 
 The kind environment contains information about the kinds of class and type names and type variables.
 
 Cp. section 2.7.6
 -/
+
 @[reducible]
-def KE : Type :=
-  Env KE_Name SemTy.Kind
+def KE₁ : Type := Env QType_Name SemTy.Kind
+
+@[reducible]
+def KE₂ : Type := Env Type_Variable SemTy.Kind
+
+@[reducible]
+def KE₃ : Type := Env QClassName SemTy.Kind
+
+structure KE where
+  ke₁ : KE₁
+  ke₂ : KE₂
+  ke₃ : KE₃
+
+
+instance ke_oplus : OPlus KE where
+  oplus ke₁ ke₂ ke₃ :=
+    OPlus.oplus ke₁.ke₁ ke₂.ke₁ ke₃.ke₁ ∧
+    OPlus.oplus ke₁.ke₂ ke₂.ke₂ ke₃.ke₂ ∧
+    OPlus.oplus ke₁.ke₃ ke₂.ke₃ ke₃.ke₃
+  oplus_many kes ke_out :=
+    OPlus.oplus_many (List.map (λ x => x.ke₁) kes) ke_out.ke₁ ∧
+    OPlus.oplus_many (List.map (λ x => x.ke₂) kes) ke_out.ke₂ ∧
+    OPlus.oplus_many (List.map (λ x => x.ke₃) kes) ke_out.ke₃
 
 /--
 ### Source Environment
@@ -446,26 +472,23 @@ def ME : Type := Env Module_Name FE
 ### The kindsOf function
 -/
 
-def kindsOfCe (ce : CE) : KE :=
-  let f := λ ⟨C, ceentry⟩ => ⟨KE_Name.C C, SemTy.HasKind.get ceentry.name⟩
+def kindsOfCe (ce : CE) : KE₃ :=
+  let f := λ ⟨C, ceentry⟩ => ⟨C, SemTy.HasKind.get ceentry.name⟩
   List.map f ce
 
 
-def kindsOfTe₁ (te : TE₁) : KE :=
-  let f := λ ⟨q, te_item ⟩ => ⟨KE_Name.T q, SemTy.HasKind.get te_item⟩
+def kindsOfTe₁ (te : TE₁) : KE₁ :=
+  let f := λ ⟨q, te_item ⟩ => ⟨q, SemTy.HasKind.get te_item⟩
   List.map f te
 
-def kindsOfTe₂ (te : TE₂) : KE :=
-  let f := λ ⟨u, ty_var⟩ => ⟨KE_Name.u u, SemTy.HasKind.get ty_var⟩
+def kindsOfTe₂ (te : TE₂) : KE₂ :=
+  let f := λ ⟨u, ty_var⟩ => ⟨u, SemTy.HasKind.get ty_var⟩
   List.map f te
 
 /--
 The `kindsOf` function is described in section 2.7.6
 -/
 def kindsOf(ce : CE)(te: TE) : KE :=
-  /- List.append is safe bc the domains of the outputs of the three environments are distinct -/
-  List.append (List.append (kindsOfCe ce) (kindsOfTe₁ te.te₁)) (kindsOfTe₂ te.te₂)
-
-
+  KE.mk (kindsOfTe₁ te.te₁) (kindsOfTe₂ te.te₂) (kindsOfCe ce)
 
 end Env

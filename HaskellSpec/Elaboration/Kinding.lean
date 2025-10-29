@@ -112,7 +112,9 @@ instance decidable_kind_ord {κ₁ κ₂ : SemTy.Kind }: Decidable 《kindord》
   decide_kind_ord κ₁ κ₂
 
 def KindEnvOrdering (ke₁ ke₂ : Env.KE) : Prop :=
-  ∀ x ∈ ke₁, ∃ x' ∈ ke₂, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪
+  (∀ x ∈ ke₁.ke₁, ∃ x' ∈ ke₂.ke₁, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪) ∧
+  (∀ x ∈ ke₁.ke₂, ∃ x' ∈ ke₂.ke₂, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪) ∧
+  (∀ x ∈ ke₁.ke₃, ∃ x' ∈ ke₂.ke₃, x.fst = x'.fst ∧ 《kindord》 x.snd ≼ x'.snd ▪)
 
 notation  "《kindenvord》" ke₁ "≼" ke₂ "▪" => KindEnvOrdering ke₁ ke₂
 
@@ -141,12 +143,12 @@ inductive ktype : Env.KE
                 → SemTy.Kind
                 → Prop where
   | KIND_TVAR :
-    (Env.KE_Name.u u, κ) ∈ ke →
+    (u, κ) ∈ ke.ke₂ →
     ----------------------------------------------
     《ktype》ke ⊢ Source.TypeExpression.var u ፥ κ ▪
 
   | KIND_TCON :
-    (Env.KE_Name.T T, κ) ∈ ke →
+    (T, κ) ∈ ke.ke₁ →
     ----------------------------------------------
     《ktype》ke ⊢ Source.TypeExpression.typename T ፥ κ ▪
 
@@ -165,7 +167,7 @@ inductive kclassassertion : Env.KE
                           → Source.ClassAssertion
                           → Prop where
   | KIND_CLASS_ASSERTION :
-    (Env.KE_Name.C ca.name, κ) ∈ ke →
+    (ca.name, κ) ∈ ke.ke₃ →
     《ktype》ke ⊢ Source.classAssertionType ca ፥ κ ▪ →
     --------------------------------------------------
     kclassassertion ke ca
@@ -184,7 +186,7 @@ inductive ksig : Env.KE
                → Source.Signature
                → Prop where
   | KIND_SIG :
-     (∀ e ∈ ke', ∃ u, e.fst = Env.KE_Name.u u) →
+     (∀ e ∈ ke'.ke₂, ∃ u, e.fst = u) →
     《oplus》ke ⊞ ke' ≡ ke'' ▪ →
      (∀ ca ∈ cx, 《kclassassertion》ke'' ⊢ ca ▪ ) →
     《ktype》 ke'' ⊢ t ፥ SemTy.Kind.Star ▪ →
@@ -231,26 +233,31 @@ inductive kctDecl : Env.KE
   | KIND_DATA :
      κ = SemTy.kind_fun_list κs →
      List.length κs = List.length us →
-    《oplus》ke ⊞ List.zip (List.map (λ u => Env.KE_Name.u u) us) κs ≡ ke'' ▪ →
+     ke''' = Env.KE.mk [] (List.zip us κs) [] →
+    《oplus》ke ⊞  ke''' ≡ ke'' ▪ →
     (∀ ca ∈ cx, 《kclassassertion》 ke'' ⊢ ca ▪)→
     (∀ conDecl ∈  cons,《kconDecl》 ke'' ⊢ conDecl ▪) →
+    ke_out = Env.KE.mk [⟨QType_Name.Unqualified S,κ⟩] [] [] →
     -----------------------------------------------------------
-    《kctDecl》 ke ⊢ (Source.ClassOrType.ct_data cx S us cons) ፥ [⟨Env.KE_Name.T (QType_Name.Unqualified S),κ⟩] ▪
+    《kctDecl》 ke ⊢ (Source.ClassOrType.ct_data cx S us cons) ፥ ke_out ▪
 
   | KIND_TYPE :
      List.length κs = List.length us →
-    《oplus》ke ⊞ List.zip (List.map (λ u => Env.KE_Name.u u) us) κs ≡ ke'' ▪ →
+     ke''' = Env.KE.mk [] (List.zip us κs) [] →
+    《oplus》ke ⊞ ke''' ≡ ke'' ▪ →
     《ktype》 ke'' ⊢ t ፥ κ ▪ →
     κ_res = SemTy.kind_fun_list (κs ++ [κ]) →
-    ------------------------------------------------------
-    《kctDecl》ke ⊢ Source.ClassOrType.ct_type S us t ፥ [⟨Env.KE_Name.T (QType_Name.Unqualified S),κ_res⟩] ▪
+    ke_out = Env.KE.mk [⟨QType_Name.Unqualified S,κ_res⟩] [] [] →
+    ---------------------------------------------------------------
+    《kctDecl》ke ⊢ Source.ClassOrType.ct_type S us t ፥ ke_out ▪
 
   | KIND_CLASS :
-    《oplus》ke ⊞ [⟨Env.KE_Name.u u,κ⟩] ≡ ke' ▪ →
+    《oplus》ke ⊞ Env.KE.mk [] [⟨u,κ⟩] [] ≡ ke' ▪ →
     (∀ ca ∈ cx, 《kclassassertion》ke' ⊢ ca ▪ )→
     (∀ sig ∈ sigs, 《ksig》ke' ⊢ sig ▪ ) →
+    ke_out = Env.KE.mk [] [] [⟨QClassName.Unqualified B,κ⟩] →
     -----------------------------------------------------------
-    《kctDecl》ke ⊢ Source.ClassOrType.ct_class cx B u sigs b ፥ [⟨Env.KE_Name.C (QClassName.Unqualified B),κ⟩] ▪
+    《kctDecl》ke ⊢ Source.ClassOrType.ct_class cx B u sigs b ፥ ke_out ▪
 
 
 set_option quotPrecheck false in
@@ -298,6 +305,6 @@ inductive kctDecls : Env.KE
 
   | KCTEMPTY :
     -------------------------------------------
-    《kctDecls》 ke ⊢ Source.ClassesAndTypes.empty ፥ [] ▪
+    《kctDecls》 ke ⊢ Source.ClassesAndTypes.empty ፥ Env.KE.mk [] [] [] ▪
 
 end Kinding
