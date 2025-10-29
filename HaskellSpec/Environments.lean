@@ -320,22 +320,25 @@ def VE : Type :=
 def ops (ve : VE)(Γ : SemTy.SClass_Name) : List QVariable :=
   sorry
 
-inductive KE_Name : Type where
-  | T : QType_Name -> KE_Name
-  | u : Type_Variable -> KE_Name
-  | C : QClassName -> KE_Name
-  deriving BEq
 
-/--
+/-
 ### Kind Environment
 
 The kind environment contains information about the kinds of class and type names and type variables.
 
 Cp. section 2.7.6
 -/
-@[reducible]
-def KE : Type :=
-  Env KE_Name SemTy.Kind
+
+def KE₁ : Type := Env QType_Name SemTy.Kind
+
+def KE₂ : Type := Env Type_Variable SemTy.Kind
+
+def KE₃ : Type := Env QClassName SemTy.Kind
+
+structure KE where
+  ke₁ : KE₁
+  ke₂ : KE₂
+  ke₃ : KE₃
 
 /--
 ### Source Environment
@@ -455,26 +458,23 @@ def ME : Type := Env Module_Name FE
 ### The kindsOf function
 -/
 
-def kindsOfCe (ce : CE) : KE :=
-  let f := λ ⟨C, ceentry⟩ => ⟨KE_Name.C C, SemTy.HasKind.get ceentry.name⟩
+def kindsOfCe (ce : CE) : KE₃ :=
+  let f := λ ⟨C, ceentry⟩ => ⟨C, SemTy.HasKind.get ceentry.name⟩
   List.map f ce
 
 
-def kindsOfTe₁ (te : TE₁) : KE :=
-  let f := λ ⟨q, te_item ⟩ => ⟨KE_Name.T q, SemTy.HasKind.get te_item⟩
+def kindsOfTe₁ (te : TE₁) : KE₁ :=
+  let f := λ ⟨q, te_item ⟩ => ⟨q, SemTy.HasKind.get te_item⟩
   List.map f te
 
-def kindsOfTe₂ (te : TE₂) : KE :=
-  let f := λ ⟨u, ty_var⟩ => ⟨KE_Name.u u, SemTy.HasKind.get ty_var⟩
+def kindsOfTe₂ (te : TE₂) : KE₂ :=
+  let f := λ ⟨u, ty_var⟩ => ⟨u, SemTy.HasKind.get ty_var⟩
   List.map f te
 
 /--
 The `kindsOf` function is described in section 2.7.6
 -/
 def kindsOf(ce : CE)(te: TE) : KE :=
-  /- List.append is safe bc the domains of the outputs of the three environments are distinct -/
-  List.append (List.append (kindsOfCe ce) (kindsOfTe₁ te.te₁)) (kindsOfTe₂ te.te₂)
-
-
+  KE.mk (kindsOfTe₁ te.te₁) (kindsOfTe₂ te.te₂) (kindsOfCe ce)
 
 end Env
