@@ -158,9 +158,9 @@ inductive context : Env.CE → Env.TE → Int
 /--
 Takes all the kinds of type variables in the kind environment and turns it into a type environment consisting only of type variables.
 -/
-def ke_to_te (ke : Env.KE) : Env.TE :=
+def ke_to_te (ke : Env.KE) : Env.TE₂ :=
   let xs : Env.TE₂ := List.map (λ ⟨u,κ⟩  => ⟨u,SemTy.Type_Variable.Mk u κ⟩) ke.ke₂
-  { te₁ := [], te₂ := xs }
+  xs
 
 
 /--
@@ -178,13 +178,13 @@ inductive sig : Env.GE
     MinKindEnv ke_min (λ ke' => 《oplus》ke ⊞ ke' ≡ ke_sum ▪ ∧
                                 《ktype》ke_sum ⊢ t ፥ SemTy.Kind.Star ▪ ∧
                                  (∀ ca ∈ cx, 《kclassassertion》ke_sum ⊢ ca ▪ )) →
-    《oplus》te  ⊞ (ke_to_te ke_min) ≡ te_in ▪ →
+    《oplus》te  ⊞ { te₁ := [], te₂ := ke_to_te ke_min } ≡ te_in ▪ →
     《context》ce,te_in,_ ⊢ cx ፥ θ ▪ →
     《type》te_in,_ ⊢ t ፥ τ ▪ →
     Source.FTV.ftv cx ⊆ Source.FTV.ftv t →
     Env.dom te.te₂ ⊆ (List.removeAll (Source.FTV.ftv t)  (Source.FTV.ftv cx)) →
     ---------------------------------------------------------
-    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,Env.VE_Item.Ordinary v (SemTy.TypeScheme.Forall _ θ τ)⟩] ▪
+    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,Env.VE_Item.Ordinary v (SemTy.TypeScheme.Forall (Env.rng (ke_to_te ke_min)) θ τ)⟩] ▪
 
 /--
 Cp. Fig 24
