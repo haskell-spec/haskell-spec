@@ -154,8 +154,10 @@ def TE_empty : TE :=
   }
 
 instance oplus_te_inst : OPlus TE where
-  oplus := λ _ _ _ => True /- TODO: Fix-/
-  oplus_many := λ _ _ => True /- TODO: Fix -/
+  oplus := λ te₁ te₂ te_output => OPlus.oplus te₁.te₁ te₂.te₁ te_output.te₁ ∧
+                                  OPlus.oplus te₁.te₂ te₂.te₂ te_output.te₂
+  oplus_many := λ te_in te_out => OPlus.oplus_many (List.map (λ x => x.te₁) te_in) te_out.te₁ ∧
+                                  OPlus.oplus_many (List.map (λ x => x.te₂) te_in) te_out.te₂
 
 /-
 ## Instance Environment

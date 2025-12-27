@@ -27,8 +27,15 @@ inductive TypeExpression : Type where
   | typename : QType_Name → TypeExpression
   | app      : TypeExpression → TypeExpression → TypeExpression
 
-instance ftv_type_expression : FTV TypeExpression where
-  ftv := λ _ => []
+def ftv_type_expression (t : TypeExpression) : List Type_Variable :=
+  match t with
+    | TypeExpression.var v => [v]
+    | TypeExpression.typename _ => []
+    | TypeExpression.app t₁ t₂ => (ftv_type_expression t₁) ++ (ftv_type_expression t₂)
+
+instance ftv_type_expr : FTV TypeExpression where
+  ftv :=  ftv_type_expression
+
 
 /--
 
@@ -42,7 +49,7 @@ structure ClassAssertion : Type where
   args : List TypeExpression
 
 instance ftv_class_assertion : FTV ClassAssertion where
-  ftv := λ _ => []
+  ftv := λ ca => [ca.var] ++ (List.flatten (List.map (λ x => FTV.ftv x) ca.args))
 
 /--
 ```text
@@ -53,7 +60,7 @@ cx ∈ Context → (class₁,...,classₖ)
 abbrev Context : Type := List ClassAssertion
 
 instance ftv_context : FTV Context where
-  ftv := λ _ => []
+  ftv := λ ctx => List.flatten (List.map (λ x => FTV.ftv x) ctx)
 
 /--
 ```text

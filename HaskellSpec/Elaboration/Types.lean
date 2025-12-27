@@ -155,7 +155,13 @@ inductive context : Env.CE → Env.TE → Int
     -----------------------------------------------------------------------------------------
     《context》ce,te,h ⊢ class_assertions ፥ List.zip Γs τs ▪
 
-def ke_to_te : Env.KE → Env.TE := sorry
+/--
+Takes all the kinds of type variables in the kind environment and turns it into a type environment consisting only of type variables.
+-/
+def ke_to_te (ke : Env.KE) : Env.TE :=
+  let xs : Env.TE₂ := List.map (λ ⟨u,κ⟩  => ⟨u,SemTy.Type_Variable.Mk sorry κ⟩) ke.ke₂
+  { te₁ := [], te₂ := xs }
+
 
 /--
 Cp. Fig 24
