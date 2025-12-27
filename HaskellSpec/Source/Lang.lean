@@ -10,6 +10,12 @@ Figure 1 and 2
 namespace Source
 
 /--
+Compute free type variables
+-/
+class FTV (α : Type) where
+  ftv : α → List Type_Variable
+
+/--
 ```text
 t ∈ Type expression → u
                     | T
@@ -21,7 +27,11 @@ inductive TypeExpression : Type where
   | typename : QType_Name → TypeExpression
   | app      : TypeExpression → TypeExpression → TypeExpression
 
+instance ftv_type_expression : FTV TypeExpression where
+  ftv := λ _ => []
+
 /--
+
 ```text
 class ∈ ClassAssertion → C (u t₁ … tₖ)   k ≥ 0
 ```
@@ -31,6 +41,9 @@ structure ClassAssertion : Type where
   var : Type_Variable
   args : List TypeExpression
 
+instance ftv_class_assertion : FTV ClassAssertion where
+  ftv := λ _ => []
+
 /--
 ```text
 cx ∈ Context → (class₁,...,classₖ)
@@ -38,6 +51,9 @@ cx ∈ Context → (class₁,...,classₖ)
 ```
 -/
 abbrev Context : Type := List ClassAssertion
+
+instance ftv_context : FTV Context where
+  ftv := λ _ => []
 
 /--
 ```text

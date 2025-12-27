@@ -155,6 +155,8 @@ inductive context : Env.CE → Env.TE → Int
     -----------------------------------------------------------------------------------------
     《context》ce,te,h ⊢ class_assertions ፥ List.zip Γs τs ▪
 
+def ke_to_te : Env.KE → Env.TE := sorry
+
 /--
 Cp. Fig 24
 ```text
@@ -170,10 +172,11 @@ inductive sig : Env.GE
     MinKindEnv ke_min (λ ke' => 《oplus》ke ⊞ ke' ≡ ke_sum ▪ ∧
                                 《ktype》ke_sum ⊢ t ፥ SemTy.Kind.Star ▪ ∧
                                  (∀ ca ∈ cx, 《kclassassertion》ke_sum ⊢ ca ▪ )) →
-    《oplus》te  ⊞ _ ≡ te_in ▪ →
+    《oplus》te  ⊞ (ke_to_te ke_min) ≡ te_in ▪ →
     《context》ce,te_in,_ ⊢ cx ፥ θ ▪ →
     《type》te_in,_ ⊢ t ፥ τ ▪ →
-    /- fv(cx) ⊆ fv(t) → -/
+    Source.FTV.ftv cx ⊆ Source.FTV.ftv t →
+    Env.dom te.te₂ ⊆ (List.removeAll (Source.FTV.ftv t)  (Source.FTV.ftv cx)) →
     ---------------------------------------------------------
     《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,Env.VE_Item.Ordinary v (SemTy.TypeScheme.Forall _ θ τ)⟩] ▪
 
