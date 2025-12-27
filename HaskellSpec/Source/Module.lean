@@ -12,8 +12,8 @@ conDecl ∈ ConstructorDecl → J t₁ … tₙ                 k ≥ 0
 ```
 -/
 inductive ConstructorDecl : Type where
-  | poscon: Constructor → List TypeExpression → ConstructorDecl
-  | labcon: Constructor → List (QVariable × TypeExpression) → ConstructorDecl
+  | poscon: Names.Constructor → List TypeExpression → ConstructorDecl
+  | labcon: Names.Constructor → List (Names.QVariable × TypeExpression) → ConstructorDecl
 
 /--
 ```text
@@ -32,20 +32,20 @@ ctDecl ∈ Class or type → type S u₁ ... uₖ = t                           
 -/
 inductive ClassOrType : Type where
   | ct_type :
-      Type_Name
-    → List Type_Variable
+      Names.Type_Name
+    → List Names.Type_Variable
     → TypeExpression
     → ClassOrType
   | ct_data :
       Context
-    → Type_Name
-    → List Type_Variable
+    → Names.Type_Name
+    → List Names.Type_Variable
     → ConstructorDecls
     → ClassOrType
   | ct_class :
       Context
-    → Class_Name
-    → Type_Variable
+    → Names.Class_Name
+    → Names.Type_Variable
     → List Signature
     → List Binding
     → ClassOrType
@@ -57,7 +57,7 @@ instDecl ∈ InstanceDecl → instance cx => C t where bind₁; …; bindₙ    
 -/
 structure InstanceDecl : Type where
   context : Context
-  className : Class_Name
+  className : Names.Class_Name
   instance_head : TypeExpression
   binds : List Binding
 
@@ -104,7 +104,7 @@ mod ∈ Module → module M (ent₁,..., entₖ) where imp₁;...;impₙ;body
 ```
 -/
 structure Module : Type where
-  name : Module_Name
+  name : Names.Module_Name
   exports : List Entity
   imports : List Import
   body : ModuleBody

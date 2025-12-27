@@ -7,6 +7,8 @@ We call them X and QX, respectively.
 Names are defined in Table 1 and Fig. 3 in the paper
 -/
 
+namespace Names
+
 /--
 ### Module Name
 
@@ -237,3 +239,5 @@ instance instIsQualQVariable : IsQual QVariable where
   isQual
     | QVariable.Qualified _ _ => True
     | QVariable.Unqualified _ => False
+
+end Names

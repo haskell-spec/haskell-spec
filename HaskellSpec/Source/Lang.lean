@@ -10,6 +10,12 @@ Figure 1 and 2
 namespace Source
 
 /--
+Compute free type variables
+-/
+class FTV (α : Type) where
+  ftv : α → List Names.Type_Variable
+
+/--
 ```text
 t ∈ Type expression → u
                     | T
@@ -17,19 +23,33 @@ t ∈ Type expression → u
 ```
 --/
 inductive TypeExpression : Type where
-  | var      : Type_Variable → TypeExpression
-  | typename : QType_Name → TypeExpression
+  | var      : Names.Type_Variable → TypeExpression
+  | typename : Names.QType_Name → TypeExpression
   | app      : TypeExpression → TypeExpression → TypeExpression
 
+def ftv_type_expression (t : TypeExpression) : List Names.Type_Variable :=
+  match t with
+    | TypeExpression.var v => [v]
+    | TypeExpression.typename _ => []
+    | TypeExpression.app t₁ t₂ => (ftv_type_expression t₁) ++ (ftv_type_expression t₂)
+
+instance ftv_type_expr : FTV TypeExpression where
+  ftv :=  ftv_type_expression
+
+
 /--
+
 ```text
 class ∈ ClassAssertion → C (u t₁ … tₖ)   k ≥ 0
 ```
 -/
 structure ClassAssertion : Type where
-  name : QClassName
-  var : Type_Variable
+  name : Names.QClassName
+  var : Names.Type_Variable
   args : List TypeExpression
+
+instance ftv_class_assertion : FTV ClassAssertion where
+  ftv := λ ca => [ca.var] ++ (List.flatten (List.map (λ x => FTV.ftv x) ca.args))
 
 /--
 ```text
@@ -39,6 +59,9 @@ cx ∈ Context → (class₁,...,classₖ)
 -/
 abbrev Context : Type := List ClassAssertion
 
+instance ftv_context : FTV Context where
+  ftv := λ ctx => List.flatten (List.map (λ x => FTV.ftv x) ctx)
+
 /--
 ```text
 sig  ∈ Signature  → v :: cx => t
@@ -46,7 +69,7 @@ sigs ∈ Signatures → sig₁; …; sigₙ   n ≥ 0
 ```
 -/
 structure Signature : Type where
-  var : QVariable
+  var : Names.QVariable
   context : Context
   type : TypeExpression
 
@@ -70,7 +93,7 @@ mutual
   ```
   --/
   inductive Binding : Type where
-    | bind_match : QVariable → NonEmpty Match → Binding
+    | bind_match : Names.QVariable → NonEmpty Match → Binding
     | bind_pat : Pattern → GuardedExprs → Binding
 
   /--
@@ -118,9 +141,9 @@ mutual
   ```
   --/
   inductive Expression : Type where
-    | var : QVariable → Expression
+    | var : Names.QVariable → Expression
     | lit : Literal → Expression
-    | constr : QConstructor → Expression
+    | constr : Names.QConstructor → Expression
     | abs : NonEmpty Pattern → Expression → Expression
     | app : Expression → Expression → Expression
     | let_bind : Binds → Expression → Expression
@@ -128,8 +151,8 @@ mutual
     | do_block : Statements → Expression
     | listComp : Expression → Qualifiers → Expression
     | listRange : Expression → Option Expression → Option Expression → Expression
-    | recUpd : Expression → List (QVariable × Expression) → Expression
-    | recConstr : QConstructor → List (QVariable × Expression) → Expression
+    | recUpd : Expression → List (Names.QVariable × Expression) → Expression
+    | recConstr : Names.QConstructor → List (Names.QVariable × Expression) → Expression
 
   /--
   ```text

@@ -92,14 +92,14 @@ class Qualify (env : Type) where
 instance instQualifyEnv : Qualify (Env name info) where
   qualify := sorry
 
-def unQual [Unqual name] : Env name info -> Env name info :=
-  List.map (λ(n, i) => (Unqual.unQual n, i))
+def unQual [Names.Unqual name] : Env name info -> Env name info :=
+  List.map (λ(n, i) => (Names.Unqual.unQual n, i))
 
 class JustQs (env : Type) where
   justQs : env -> env
 
-instance instJustQsEnv [IsQual name] : JustQs (Env name info) where
-  justQs := List.filter (IsQual.isQual ∘ Prod.fst)
+instance instJustQsEnv [Names.IsQual name] : JustQs (Env name info) where
+  justQs := List.filter (Names.IsQual.isQual ∘ Prod.fst)
 
 
 def justSingle [BEq name] [BEq info] : Env name info -> Env name info :=
@@ -125,8 +125,8 @@ the type variable information records in-scope type variables.
 Cp. section 2.7.2
 -/
 
-abbrev TE₁ : Type := Env QType_Name TE_Item
-abbrev TE₂ : Type := Env Type_Variable SemTy.Type_Variable
+abbrev TE₁ : Type := Env Names.QType_Name TE_Item
+abbrev TE₂ : Type := Env Names.Type_Variable SemTy.Type_Variable
 
 structure TE : Type where
   te₁ : TE₁
@@ -139,7 +139,7 @@ instance instJustQsTE : JustQs TE where
     }
 
 def TE_init : TE :=
-  { te₁ := [(QType_Name.Special Special_Type_Constructor.List, TE_Item.DataType (SemTy.Type_Constructor.Mk (OType_Name.Special Special_Type_Constructor.List) (SemTy.Kind.Fun SemTy.Kind.Star SemTy.Kind.Star)))]
+  { te₁ := [(Names.QType_Name.Special Names.Special_Type_Constructor.List, TE_Item.DataType (SemTy.Type_Constructor.Mk (Names.OType_Name.Special Names.Special_Type_Constructor.List) (SemTy.Kind.Fun SemTy.Kind.Star SemTy.Kind.Star)))]
     te₂ := []
   }
 
@@ -152,6 +152,12 @@ def TE_empty : TE :=
   { te₁ := []
     te₂ := []
   }
+
+instance oplus_te_inst : OPlus TE where
+  oplus := λ te₁ te₂ te_output => OPlus.oplus te₁.te₁ te₂.te₁ te_output.te₁ ∧
+                                  OPlus.oplus te₁.te₂ te₂.te₂ te_output.te₂
+  oplus_many := λ te_in te_out => OPlus.oplus_many (List.map (λ x => x.te₁) te_in) te_out.te₁ ∧
+                                  OPlus.oplus_many (List.map (λ x => x.te₂) te_in) te_out.te₂
 
 /-
 ## Instance Environment
@@ -173,7 +179,7 @@ v is bound in a dictionary abstraction
 v : Γ (α τ_1 … τ_k)
 ```
 -/
-  | BoundInDictionaryAbstraction : Variable
+  | BoundInDictionaryAbstraction : Names.Variable
     -> SemTy.SClass_Name -> SemTy.Type_Variable
     -> List SemTy.TypeS -> IE_Entry
 /--
@@ -182,7 +188,7 @@ x represents a superclass in classinfo
 x : Γ α
 ```
 -/
-  | SuperclassInClassinfo : QVariable -> SemTy.SClass_Name
+  | SuperclassInClassinfo : Names.QVariable -> SemTy.SClass_Name
     -> SemTy.Type_Variable-> IE_Entry
 /--
 x is a dictionary from an instance declaration
@@ -190,7 +196,7 @@ x is a dictionary from an instance declaration
 x : ∀α_1 … α_k . θ ⇒ Γ (χ α_1 … α_k)
 ```
 -/
-  | DictionaryFromInstanceDeclaration : QVariable
+  | DictionaryFromInstanceDeclaration : Names.QVariable
     -> List SemTy.Type_Variable
     -> SemTy.Context
     -> SemTy.SClass_Name
@@ -202,7 +208,7 @@ x extracts a dictionary for the superclass Γ
 x : ∀α . Γ'α ⇒ Γα
 ```
 -/
-  | ExtractsADictionaryForTheSuperclass : QVariable
+  | ExtractsADictionaryForTheSuperclass : Names.QVariable
     -> SemTy.Type_Variable
     -> SemTy.SClass_Name
     -> SemTy.SClass_Name
@@ -219,12 +225,12 @@ Cp. section 2.7.1
 structure CEEntry : Type where
   name : SemTy.SClass_Name
   h : Int
-  var : Variable
-  class_name : QClassName
+  var : Names.Variable
+  class_name : Names.QClassName
   ie : IE
 
 @[reducible]
-def CE := List (QClassName × CEEntry)
+def CE := List (Names.QClassName × CEEntry)
 
 
 /--
@@ -240,7 +246,7 @@ def CE_init : CE := []
 ### Update Environment
 -/
 
-abbrev UE : Type := Env QVariable SemTy.TypeS
+abbrev UE : Type := Env Names.QVariable SemTy.TypeS
 
 instance instSubstituteUE : SemTy.Substitute UE where
   substitute := sorry
@@ -258,15 +264,15 @@ structure LabelInfo : Type where
   update_env : UE
   ty : SemTy.TypeS
 
-abbrev LE : Type := Env QConstructor LabelInfo
+abbrev LE : Type := Env Names.QConstructor LabelInfo
 
-abbrev DE₁ : Type := Env QConstructor (QConstructor × SemTy.Type_Constructor × SemTy.TypeScheme)
-abbrev DE₂ : Type := Env QVariable (QVariable × SemTy.Type_Constructor × LE)
+abbrev DE₁ : Type := Env Names.QConstructor (Names.QConstructor × SemTy.Type_Constructor × SemTy.TypeScheme)
+abbrev DE₂ : Type := Env Names.QVariable (Names.QVariable × SemTy.Type_Constructor × LE)
 
-def constrs (de : DE₁)(χ : SemTy.Type_Constructor) : List QConstructor :=
+def constrs (de : DE₁)(χ : SemTy.Type_Constructor) : List Names.QConstructor :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
-def fields (de : DE₂)(χ : SemTy.Type_Constructor) : List QVariable :=
+def fields (de : DE₂)(χ : SemTy.Type_Constructor) : List Names.QVariable :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
 /--
@@ -303,8 +309,8 @@ inductive OE : Type where
 
 
 inductive VE_Item : Type where
-  | Ordinary : QVariable → SemTy.TypeScheme → VE_Item
-  | Class : QVariable → SemTy.ClassTypeScheme → VE_Item
+  | Ordinary : Names.QVariable → SemTy.TypeScheme → VE_Item
+  | Class : Names.QVariable → SemTy.ClassTypeScheme → VE_Item
   deriving BEq
 
 
@@ -315,9 +321,9 @@ Cp. section 2.7.5
 -/
 @[reducible]
 def VE : Type :=
-  Env QVariable VE_Item
+  Env Names.QVariable VE_Item
 
-def ops (ve : VE)(Γ : SemTy.SClass_Name) : List QVariable :=
+def ops (ve : VE)(Γ : SemTy.SClass_Name) : List Names.QVariable :=
   sorry
 
 /-
@@ -329,13 +335,13 @@ Cp. section 2.7.6
 -/
 
 @[reducible]
-def KE₁ : Type := Env QType_Name SemTy.Kind
+def KE₁ : Type := Env Names.QType_Name SemTy.Kind
 
 @[reducible]
-def KE₂ : Type := Env Type_Variable SemTy.Kind
+def KE₂ : Type := Env Names.Type_Variable SemTy.Kind
 
 @[reducible]
-def KE₃ : Type := Env QClassName SemTy.Kind
+def KE₃ : Type := Env Names.QClassName SemTy.Kind
 
 structure KE where
   ke₁ : KE₁
@@ -359,16 +365,16 @@ instance ke_oplus : OPlus KE where
 Cp. section 2.7.7
 -/
 structure SE : Type where
-  cs : List (Class_Name × Module_Name)
-  ts : List (QType_Name × Module_Name)
-  ds : List (Unit × Module_Name)
-  vs : List (Unit × Module_Name)
+  cs : List (Names.Class_Name × Names.Module_Name)
+  ts : List (Names.QType_Name × Names.Module_Name)
+  ds : List (Unit × Names.Module_Name)
+  vs : List (Unit × Names.Module_Name)
 
-def class_names_for_module (se: SE)(m : Module_Name) : List Class_Name :=
+def class_names_for_module (se: SE)(m : Names.Module_Name) : List Names.Class_Name :=
   let filtered := se.cs.filter (λ x => x.snd == m)
   filtered.map (λ x => x.fst)
 
-def type_names_for_module (se: SE)(m : Module_Name) : List QType_Name :=
+def type_names_for_module (se: SE)(m : Names.Module_Name) : List Names.QType_Name :=
   let filtered := se.ts.filter (λ x => x.snd == m)
   filtered.map (λ x => x.fst)
 
@@ -464,7 +470,7 @@ instance instQualifyEE : Qualify EE where
 Cp. section 2.7.9
 -/
 @[reducible]
-def ME : Type := Env Module_Name FE
+def ME : Type := Env Names.Module_Name FE
 
 
 /-

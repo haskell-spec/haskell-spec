@@ -3,10 +3,10 @@ import HaskellSpec.Prelude
 import HaskellSpec.Elaboration.Literals
 import HaskellSpec.Source.Patterns
 
-def unqual_var (var : QVariable) : Variable :=
+def unqual_var (var : Names.QVariable) : Names.Variable :=
   match var with
-    | (QVariable.Qualified _m x) => x
-    | (QVariable.Unqualified x) => x
+    | (Names.QVariable.Qualified _m x) => x
+    | (Names.QVariable.Unqualified x) => x
 
 /- Applying typeclass methods to their type, dictionary, and term arguments. -/
 

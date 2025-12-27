@@ -237,7 +237,7 @@ inductive kctDecl : Env.KE
     《oplus》ke ⊞  ke''' ≡ ke'' ▪ →
     (∀ ca ∈ cx, 《kclassassertion》 ke'' ⊢ ca ▪)→
     (∀ conDecl ∈  cons,《kconDecl》 ke'' ⊢ conDecl ▪) →
-    ke_out = Env.KE.mk [⟨QType_Name.Unqualified S,κ⟩] [] [] →
+    ke_out = Env.KE.mk [⟨Names.QType_Name.Unqualified S,κ⟩] [] [] →
     -----------------------------------------------------------
     《kctDecl》 ke ⊢ (Source.ClassOrType.ct_data cx S us cons) ፥ ke_out ▪
 
@@ -247,7 +247,7 @@ inductive kctDecl : Env.KE
     《oplus》ke ⊞ ke''' ≡ ke'' ▪ →
     《ktype》 ke'' ⊢ t ፥ κ ▪ →
     κ_res = SemTy.kind_fun_list (κs ++ [κ]) →
-    ke_out = Env.KE.mk [⟨QType_Name.Unqualified S,κ_res⟩] [] [] →
+    ke_out = Env.KE.mk [⟨Names.QType_Name.Unqualified S,κ_res⟩] [] [] →
     ---------------------------------------------------------------
     《kctDecl》ke ⊢ Source.ClassOrType.ct_type S us t ፥ ke_out ▪
 
@@ -255,7 +255,7 @@ inductive kctDecl : Env.KE
     《oplus》ke ⊞ Env.KE.mk [] [⟨u,κ⟩] [] ≡ ke' ▪ →
     (∀ ca ∈ cx, 《kclassassertion》ke' ⊢ ca ▪ )→
     (∀ sig ∈ sigs, 《ksig》ke' ⊢ sig ▪ ) →
-    ke_out = Env.KE.mk [] [] [⟨QClassName.Unqualified B,κ⟩] →
+    ke_out = Env.KE.mk [] [] [⟨Names.QClassName.Unqualified B,κ⟩] →
     -----------------------------------------------------------
     《kctDecl》ke ⊢ Source.ClassOrType.ct_class cx B u sigs b ፥ ke_out ▪
 

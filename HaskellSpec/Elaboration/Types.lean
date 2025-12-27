@@ -45,7 +45,7 @@ type_apply T [t₁,t₂,t₃] = T t₁ t₂ t₃
 ```
 TODO: Reverse order!
 -/
-def type_apply (T : QType_Name)
+def type_apply (T : Names.QType_Name)
                (ts : List Source.TypeExpression)
                : Source.TypeExpression :=
   match ts with
@@ -156,6 +156,14 @@ inductive context : Env.CE → Env.TE → Int
     《context》ce,te,h ⊢ class_assertions ፥ List.zip Γs τs ▪
 
 /--
+Takes all the kinds of type variables in the kind environment and turns it into a type environment consisting only of type variables.
+-/
+def ke_to_te (ke : Env.KE) : Env.TE₂ :=
+  let xs : Env.TE₂ := List.map (λ ⟨u,κ⟩  => ⟨u,SemTy.Type_Variable.Mk u κ⟩) ke.ke₂
+  xs
+
+
+/--
 Cp. Fig 24
 ```text
 GE ⊢ sig : VE
@@ -170,11 +178,13 @@ inductive sig : Env.GE
     MinKindEnv ke_min (λ ke' => 《oplus》ke ⊞ ke' ≡ ke_sum ▪ ∧
                                 《ktype》ke_sum ⊢ t ፥ SemTy.Kind.Star ▪ ∧
                                  (∀ ca ∈ cx, 《kclassassertion》ke_sum ⊢ ca ▪ )) →
-    《context》_,_,_ ⊢ cx ፥ θ ▪ →
-    《type》_,_ ⊢ t ፥ τ ▪ →
-    /- fv(cx) ⊆ fv(t) → -/
+    《oplus》te  ⊞ { te₁ := [], te₂ := ke_to_te ke_min } ≡ te_in ▪ →
+    《context》ce,te_in,_ ⊢ cx ፥ θ ▪ →
+    《type》te_in,_ ⊢ t ፥ τ ▪ →
+    Source.FTV.ftv cx ⊆ Source.FTV.ftv t →
+    Env.dom te.te₂ ⊆ (List.removeAll (Source.FTV.ftv t)  (Source.FTV.ftv cx)) →
     ---------------------------------------------------------
-    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,_⟩] ▪
+    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,Env.VE_Item.Ordinary v (SemTy.TypeScheme.Forall (Env.rng (ke_to_te ke_min)) θ τ)⟩] ▪
 
 /--
 Cp. Fig 24

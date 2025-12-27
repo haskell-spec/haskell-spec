@@ -4,13 +4,13 @@ import HaskellSpec.SemanticTypes
 
 
 def make_tuple_constructor(n : Nat) : Target.Expression :=
-  Target.Expression.constr (QConstructor.Special (Special_Data_Constructor.Tuple n))
+  Target.Expression.constr (Names.QConstructor.Special (Names.Special_Data_Constructor.Tuple n))
 
 def make_tuple (es : List Target.Expression) : Target.Expression :=
   let constructor := make_tuple_constructor es.length
   es.foldl Target.Expression.app constructor
 
-def make_type_app (x : QVariable)(τs : List SemTy.TypeS)(e: Target.Expression) : Target.Expression :=
+def make_type_app (x : Names.QVariable)(τs : List SemTy.TypeS)(e: Target.Expression) : Target.Expression :=
   match τs with
   | [] => Target.Expression.app (Target.Expression.var x) e
   | (τ :: τs) => Target.Expression.app (Target.Expression.typ_app (Target.Expression.var x) (NonEmpty.mk τ τs)) e
@@ -35,7 +35,7 @@ mutual
     | DICT_VAR :
       Env.IE_Entry.BoundInDictionaryAbstraction v class_name α τs ∈ ie →
       --------------------------------------------------------------------------------------------------------------------------------
-      《dict-single》ie ⊢ Target.Expression.var (QVariable.Unqualified v) ፥ ⟨class_name, τs.foldl SemTy.TypeS.App (SemTy.TypeS.Variable α)⟩ ▪
+      《dict-single》ie ⊢ Target.Expression.var (Names.QVariable.Unqualified v) ፥ ⟨class_name, τs.foldl SemTy.TypeS.App (SemTy.TypeS.Variable α)⟩ ▪
 
     | DICT_INST :
       (Env.IE_Entry.DictionaryFromInstanceDeclaration x αs θ Γ χ _) ∈ ie ->
