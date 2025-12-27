@@ -170,11 +170,12 @@ inductive sig : Env.GE
     MinKindEnv ke_min (λ ke' => 《oplus》ke ⊞ ke' ≡ ke_sum ▪ ∧
                                 《ktype》ke_sum ⊢ t ፥ SemTy.Kind.Star ▪ ∧
                                  (∀ ca ∈ cx, 《kclassassertion》ke_sum ⊢ ca ▪ )) →
-    《context》_,_,_ ⊢ cx ፥ θ ▪ →
-    《type》_,_ ⊢ t ፥ τ ▪ →
+    《oplus》te  ⊞ _ ≡ te_in ▪ →
+    《context》ce,te_in,_ ⊢ cx ፥ θ ▪ →
+    《type》te_in,_ ⊢ t ፥ τ ▪ →
     /- fv(cx) ⊆ fv(t) → -/
     ---------------------------------------------------------
-    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,_⟩] ▪
+    《sig》⟨ce,te,de⟩ ⊢ (Source.Signature.mk v cx t) ፥ [⟨v,Env.VE_Item.Ordinary v (SemTy.TypeScheme.Forall _ θ τ)⟩] ▪
 
 /--
 Cp. Fig 24

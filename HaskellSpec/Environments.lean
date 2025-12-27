@@ -153,6 +153,10 @@ def TE_empty : TE :=
     te₂ := []
   }
 
+instance oplus_te_inst : OPlus TE where
+  oplus := λ _ _ _ => True /- TODO: Fix-/
+  oplus_many := λ _ _ => True /- TODO: Fix -/
+
 /-
 ## Instance Environment
 -/
