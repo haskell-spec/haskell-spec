@@ -485,7 +485,7 @@ mutual
     | FUNBIND :
       /- Forall2NE match_sources match_targets (λ match_sourceᵢ match_targetᵢ =>
       matchR ge ie ve match_sourceᵢ match_targetᵢ τ) → -/
-      x = QVariable.Unqualified (Variable.Mk "x") →
+      x = Names.QVariable.Unqualified (Names.Variable.Mk "x") →
       bind ge ie ve
         (Source.Binding.bind_match x match_sources)
         (Target.Binding.bind_match x match_targets)

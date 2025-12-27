@@ -26,15 +26,15 @@ ent ∈ Entity → x
 ```
 -/
 inductive Entity : Type where
-  | var        : QVariable → Entity
-  | cons       : QConstructor → Entity
-  | type_some  : QType_Name → List QVariable → List QConstructor → Entity
-  | type_all   : QType_Name → Entity
-  | class_some : QClassName → List QVariable → Entity
-  | class_all  : QClassName → Entity
-  | module     : Module_Name → Entity -- use QModule_Name
+  | var        : Names.QVariable → Entity
+  | cons       : Names.QConstructor → Entity
+  | type_some  : Names.QType_Name → List Names.QVariable → List Names.QConstructor → Entity
+  | type_all   : Names.QType_Name → Entity
+  | class_some : Names.QClassName → List Names.QVariable → Entity
+  | class_all  : Names.QClassName → Entity
+  | module     : Names.Module_Name → Entity -- use QModule_Name
 
-def constrs (ents : List Entity) : List QConstructor :=
+def constrs (ents : List Entity) : List Names.QConstructor :=
   let pred ent := match ent with
     | Entity.cons K => some K
     | _ => none
@@ -58,8 +58,8 @@ imp ∈ Import → import qualifier M as M' implist
 -/
 structure Import : Type where
   qualified : Qualifier
-  from_mod : Module_Name
-  as_mod : Module_Name
+  from_mod : Names.Module_Name
+  as_mod : Names.Module_Name
   entities : ImportList
 
 end Source

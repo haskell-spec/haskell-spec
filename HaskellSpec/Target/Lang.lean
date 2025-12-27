@@ -30,8 +30,8 @@ t ∈ Type expression → u
 ```
 -/
 inductive TypeExpression : Type where
-  | var      : Type_Variable → TypeExpression
-  | typename : Type_Name → TypeExpression
+  | var      : Names.Type_Variable → TypeExpression
+  | typename : Names.Type_Name → TypeExpression
   | app      : TypeExpression → TypeExpression → TypeExpression
   deriving Repr
 
@@ -41,8 +41,8 @@ class ∈ ClassAssertion → C (u t₁ … tₖ)   k ≥ 0
 ```
 -/
 structure ClassAssertion : Type where
-  name : Class_Name
-  var : Type_Variable
+  name : Names.Class_Name
+  var : Names.Type_Variable
   args : List TypeExpression
   deriving Repr
 
@@ -70,10 +70,10 @@ mutual
   ```
   -/
   inductive Pattern : Type where
-    | var : Variable → SemTy.TypeScheme →  Pattern
-    | constructor : QConstructor → List Pattern → Pattern
-    | constructor_labelled : QConstructor → List (Variable × Pattern) → Pattern
-    | as : QVariable → SemTy.TypeScheme → Pattern → Pattern
+    | var : Names.Variable → SemTy.TypeScheme →  Pattern
+    | constructor : Names.QConstructor → List Pattern → Pattern
+    | constructor_labelled : Names.QConstructor → List (Names.Variable × Pattern) → Pattern
+    | as : Names.QVariable → SemTy.TypeScheme → Pattern → Pattern
     | lazy : Pattern → Pattern
     | wildcard : Pattern
     | exp : Expression → Pattern
@@ -99,7 +99,7 @@ mutual
   ```
   -/
   inductive Binding : Type where
-    | bind_match : QVariable → NonEmpty Match → Binding
+    | bind_match : Names.QVariable → NonEmpty Match → Binding
     | bind_pat : Pattern → GuardedExprs → Binding
     deriving Repr
 
@@ -151,9 +151,9 @@ mutual
   ```
   -/
   inductive Expression : Type where
-    | var : QVariable → Expression
+    | var : Names.QVariable → Expression
     | lit : Literal → Expression
-    | constr : QConstructor → Expression
+    | constr : Names.QConstructor → Expression
     | abs : NonEmpty Pattern → Expression → Expression
     | app : Expression → Expression → Expression
     | let_bind : Binds → Expression → Expression
@@ -162,7 +162,7 @@ mutual
     | recUpd : Expression → List FieldBinding → Expression
     | recConstr : Expression → List FieldBinding → Expression
     | typ_app : Expression → NonEmpty SemTy.TypeS → Expression
-    | typ_abs : NonEmpty Type_Variable → Expression → Expression
+    | typ_abs : NonEmpty Names.Type_Variable → Expression → Expression
     deriving Repr
 
   /--
@@ -216,7 +216,7 @@ mutual
   ```
   -/
   inductive FieldBinding : Type where
-    | fb_bind : QVariable → Expression → FieldBinding
+    | fb_bind : Names.QVariable → Expression → FieldBinding
     deriving Repr
 end
 
@@ -235,7 +235,7 @@ instDecls ∈ InstanceDecls → instDecl₁; …; instDeclₙ   n ≥ 0
 -/
 structure InstanceDecl : Type where
   context : Context
-  className : Class_Name
+  className : Names.Class_Name
   instance_head : TypeExpression
   binds : List Binding
   deriving Repr
@@ -249,8 +249,8 @@ conDecls ∈ ConstructorDecls → conDecl₁ | … | conDeclₙ   n ≥ 1
 ```
 -/
 inductive ConstructorDecl : Type where
-  | poscon: Constructor → List TypeExpression → ConstructorDecl
-  | labcon: Constructor → List (QVariable × TypeExpression) → ConstructorDecl
+  | poscon: Names.Constructor → List TypeExpression → ConstructorDecl
+  | labcon: Names.Constructor → List (Names.QVariable × TypeExpression) → ConstructorDecl
   deriving Repr
 
 /--
@@ -260,7 +260,7 @@ sigs ∈ Signatures → sig₁; …; sigₙ   n ≥ 0
 ```
 -/
 inductive Signature : Type where
-  | sig : QVariable → Context → TypeExpression → Signature
+  | sig : Names.QVariable → Context → TypeExpression → Signature
   deriving Repr
 
 /--
@@ -272,20 +272,20 @@ ctDecl ∈ Class or type → type S u₁ ... uₖ = t                           
 -/
 inductive ClassOrType : Type where
   | ct_type :
-      Type_Name
-    → List Type_Variable
+      Names.Type_Name
+    → List Names.Type_Variable
     → TypeExpression
     → ClassOrType
   | ct_data :
       Context
-    → Type_Name
-    → List Type_Variable
+    → Names.Type_Name
+    → List Names.Type_Variable
     → NonEmpty ConstructorDecl
     → ClassOrType
   | ct_class :
       Context
-    → Class_Name
-    → Type_Variable
+    → Names.Class_Name
+    → Names.Type_Variable
     → List Signature
     → List Binding
     → ClassOrType
@@ -334,7 +334,7 @@ mod ∈ Module → module M where typeDecls; binds
 ```
 -/
 structure Module : Type where
-  name : Module_Name -- Use QModule:Name in the future?
+  name : Names.Module_Name -- Use QModule:Name in the future?
   decls : List TypeDeclaration
   deriving Repr
 

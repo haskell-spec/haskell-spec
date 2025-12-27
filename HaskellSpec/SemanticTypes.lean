@@ -32,7 +32,7 @@ class HasKind (α : Type) where
 ```
 -/
 structure SClass_Name : Type where
-  name : OClass_Name
+  name : Names.OClass_Name
   kind : Kind
   deriving BEq, Repr
 
@@ -45,7 +45,7 @@ instance instHasKindSClass_Name : HasKind SClass_Name where
 ```
 -/
 inductive Type_Constructor : Type where
-  | Mk : OType_Name → Kind → Type_Constructor
+  | Mk : Names.OType_Name → Kind → Type_Constructor
   deriving BEq, Repr
 
 instance instHasKindType_Constructor : HasKind Type_Constructor where
@@ -58,7 +58,7 @@ instance instHasKindType_Constructor : HasKind Type_Constructor where
 ```
 -/
 inductive Type_Variable : Type where
-  | Mk : Type_Variable → Kind → Type_Variable
+  | Mk : Names.Type_Variable → Kind → Type_Variable
   deriving BEq, Repr
 
 instance instHasKindType_Variable : HasKind Type_Variable where

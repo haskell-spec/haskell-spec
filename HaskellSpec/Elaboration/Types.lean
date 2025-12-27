@@ -45,7 +45,7 @@ type_apply T [t₁,t₂,t₃] = T t₁ t₂ t₃
 ```
 TODO: Reverse order!
 -/
-def type_apply (T : QType_Name)
+def type_apply (T : Names.QType_Name)
                (ts : List Source.TypeExpression)
                : Source.TypeExpression :=
   match ts with
@@ -159,7 +159,7 @@ inductive context : Env.CE → Env.TE → Int
 Takes all the kinds of type variables in the kind environment and turns it into a type environment consisting only of type variables.
 -/
 def ke_to_te (ke : Env.KE) : Env.TE :=
-  let xs : Env.TE₂ := List.map (λ ⟨u,κ⟩  => ⟨u,SemTy.Type_Variable.Mk sorry κ⟩) ke.ke₂
+  let xs : Env.TE₂ := List.map (λ ⟨u,κ⟩  => ⟨u,SemTy.Type_Variable.Mk u κ⟩) ke.ke₂
   { te₁ := [], te₂ := xs }
 
 

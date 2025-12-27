@@ -11,22 +11,22 @@ inductive Pattern : Type where
     /--
     A variable pattern.
     -/
-  | var : QVariable → Pattern
+  | var : Names.QVariable → Pattern
     /--
     A constructor pattern.
     Example: `Student name id`
     -/
-  | constructor : QConstructor → List Pattern → Pattern
+  | constructor : Names.QConstructor → List Pattern → Pattern
     /--
     A labelled constructor pattern.
     Example: `Student { name = name, id = id }`
     -/
-  | constructor_labelled : QConstructor → List (Variable × Pattern) → Pattern
+  | constructor_labelled : Names.QConstructor → List (Names.Variable × Pattern) → Pattern
     /--
     An as-pattern.
     Example: `s @ Student name id`
     -/
-  | as : QVariable → Pattern → Pattern
+  | as : Names.QVariable → Pattern → Pattern
     /--
     A lazy pattern.
     Example: `~p`
