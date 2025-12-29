@@ -507,10 +507,15 @@ mutual
                       → Target.Binds
                       → Env.VE
                       → Prop where
-    | MONOBINDS :
-      -- Forall3 bs bs' ves (λ b b' veᵢ => 《bind》ge,ie,ve ⊢ b ⇝ b' ፥ veᵢ ▪ ) →
+    | MONOBINDS_NIL :
       ------------------------------------
-      《monobinds》ge,ie,ve ⊢ _ ⇝ _ ፥ _ ▪
+      《monobinds》ge,ie,ve ⊢ [] ⇝ Target.Binds.non_recursive [] ፥ [] ▪
+
+    | MONOBINDS_CONS :
+      《monobinds》ge,ie,ve ⊢ bs ⇝ bs' ፥ ves ▪ →
+      《bind》ge,ie,ve ⊢ b ⇝ b' ፥ _ ▪ →
+      -----------------------------------------
+      《monobinds》ge,ie,ve ⊢ (_::bs) ⇝ _ ፥ _ ▪
 
   /--
   Cp. Fig 30
@@ -525,10 +530,16 @@ mutual
                   → Env.VE
                   → Prop where
     | BINDG :
-      《sigs》ge ⊢ _ ፥ _ ▪ →
-      《monobinds》 _,_,_ ⊢ _ ⇝ _ ፥ _ ▪ →
+      《sigs》ge ⊢ sigs' ፥ ve_sigs ▪ →
+      ve_rec = Env.remove ve_monobs (Env.dom ve_sigs) →
+      《oplus》ve_sigs ⊞ ve_rec ≡ ve' ▪ →
+      ve_in = Env.OplusTilde.oplustilde ve ve_prim →
+      ve_sigs ⊆ ve_bindg →
+      /- [] ∩ (Source.FTV.ftv ie ∪ Source.FTV.ftv ve) = ∅ → -/
+      《oplus》ie ⊞ oe ≡ ie_in ▪ →
+      《monobinds》 ge,ie_in,ve_in ⊢ bindgroup ⇝ binds' ፥ ve_monobs ▪ →
       -------------------------------
-      《bindG》ge,_,_ ⊢ _ ; _ ⇝ _ ፥ _ ▪
+      《bindG》ge,ie,ve ⊢ sigs' ; bindgroup ⇝ _ ፥ ve_bindg ▪
 
   /--
   Cp. Fig. 29

@@ -217,6 +217,10 @@ x : ∀α . Γ'α ⇒ Γα
 @[reducible]
 def IE := List IE_Entry
 
+instance oplus_ie_inst : OPlus IE where
+  oplus := sorry
+  oplus_many := sorry
+
 /--
 ### Class environment
 
