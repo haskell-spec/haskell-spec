@@ -102,9 +102,16 @@ instance instJustQsEnv [Names.IsQual name] : JustQs (Env name info) where
   justQs := List.filter (Names.IsQual.isQual ∘ Prod.fst)
 
 
-def justSingle [BEq name] [BEq info] : Env name info -> Env name info :=
-  sorry -- TODO My first attempt at defining this did not satisfy the
-        -- termination checker.
+/--
+This function is defined at the beginning of section 2.7.
+It retains only information about names with a single entry.
+-/
+def justSingle [BEq name] [BEq info] (env : Env name info) : Env name info :=
+  env.filter (λ ⟨name,_⟩ => (env.filter (λ ⟨name',_⟩ => name == name')).length == 1)
+
+#guard justSingle [("a", ()), ("a", ())] == []
+#guard justSingle [("a", ()), ("b", ())] == [("a", ()),("b", ())]
+#guard justSingle [("a", ()), ("b", ()), ("b", ())] == [("a", ())]
 
 inductive TE_Item : Type where
   | DataType : SemTy.Type_Constructor →  TE_Item

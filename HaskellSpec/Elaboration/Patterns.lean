@@ -78,20 +78,22 @@ mutual
       -/
     | PVAR :
       σ = (SemTy.TypeScheme.Forall [] [] τ) →
-      -----------------------------------------------------------------------------------------------------------------------
-      《pat》ge,ie ⊢ Source.Pattern.var x ⇝ Target.Pattern.var (Names.unqual_var x) σ ፥ [(x, Env.VE_Item.Ordinary x σ)] , τ ▪
+      env = [(x, Env.VE_Item.Ordinary x σ)] →
+      -------------------------------------------------------------------------------------------
+      《pat》ge,ie ⊢ Source.Pattern.var x ⇝ Target.Pattern.var (Names.unqual_var x) σ ፥ env , τ ▪
 
     | PAS :
       《pat》ge,ie ⊢ p ⇝ p' ፥ veₚ , τ ▪ →
       σ = SemTy.TypeScheme.Forall [] [] τ →
-      《oplus》veₚ ⊞ [⟨Names.QVariable.Unqualified v,Env.VE_Item.Ordinary (Names.QVariable.Unqualified v) σ⟩] ≡ ve_res ▪ →
-      -----------
+      ve_ext = [⟨Names.QVariable.Unqualified v, Env.VE_Item.Ordinary (Names.QVariable.Unqualified v) σ⟩] →
+      《oplus》veₚ ⊞ ve_ext ≡ ve_res ▪ →
+      ------------------------------------------------------------------------------
       《pat》ge,ie ⊢ Source.Pattern.as v p ⇝ Target.Pattern.as v σ p' ፥ ve_res , τ ▪
 
     | PIRR :
-      《pat》ge,ie ⊢ p₁ ⇝ p₂ ፥ ve, τ ▪ →
+      《pat》ge,ie ⊢ p ⇝ p' ፥ ve, τ ▪ →
       -----------------------------------------------------------------------
-      《pat》ge,ie ⊢ Source.Pattern.lazy p₁ ⇝ Target.Pattern.lazy p₂ ፥ ve, τ ▪
+      《pat》ge,ie ⊢ Source.Pattern.lazy p ⇝ Target.Pattern.lazy p' ፥ ve, τ ▪
 
     | PWILD :
       --------------------------------------------------------------
@@ -109,6 +111,7 @@ mutual
 
     | PLAB :
       ge = ⟨ce,te,⟨de₁,de₂⟩⟩ →
+      《pats》ge,ie ⊢ _ ⇝ _ ፥ _ , _ ▪ →
       -------------------------------
       《pat》ge,ie ⊢ Source.Pattern.constructor_labelled c lps ⇝ Target.Pattern.constructor_labelled c lps' ፥ _ , _ ▪
 
