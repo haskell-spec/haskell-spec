@@ -65,8 +65,8 @@ mutual
                 | ~p
                 | _
                 | { e }
-                | v : σ {e1, e2}
-    fp ∈ FieldPattern → x = p
+                | v : σ {e1, e2} -- This is only needed for the elaboration of `n+k` patterns and therefore omitted.
+    fp ∈ FieldPattern → x = p   -- This is inlined.
   ```
   -/
   inductive Pattern : Type where
@@ -76,9 +76,23 @@ mutual
     | as : Names.Variable → SemTy.TypeScheme → Pattern → Pattern
     | lazy : Pattern → Pattern
     | wildcard : Pattern
+      /--
+      This is used in the elaboration of literal patterns for integers and floats.
+
+      The semantics of this pattern is:
+      - The pattern `{e}` matches against a value `z` if `e z` evaluates to true.
+      -/
     | exp : Expression → Pattern
-    | char : Char → Pattern -- Seems to be omitted in Faxen?
-    | string : String → Pattern -- Seems to be omitted in Faxen?
+      /--
+      This is used in the elaboration of literal patterns for characters.
+      The production seems to have been mistakenly omitted by Faxen.
+      -/
+    | char : Char → Pattern --
+      /--
+      This is used in the elaboration of literal patterns for strings.
+      The production seems to have been mistakenly omitted by Faxen.
+      -/
+    | string : String → Pattern
     deriving Repr
 
   /--

@@ -132,6 +132,9 @@ mutual
       -----------------------------------------------------------------------------------------------------------------
       《pat》ge,ie ⊢ Source.Pattern.literal (Source.Literal.float n d) ⇝ Target.Pattern.exp (apply_equals τ ed e) ፥ [], τ ▪
 
+  /--
+  This judgement elaborates a list of source patterns to a list of target patterns, variable environments and types.
+  -/
   inductive pats : Env.GE
                  → Env.IE
                  → List Source.Pattern
