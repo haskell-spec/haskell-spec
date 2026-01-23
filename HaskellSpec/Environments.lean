@@ -305,9 +305,17 @@ abbrev LE : Type := Env Names.QConstructor LabelInfo
 abbrev DE₁ : Type := Env Names.QConstructor (Names.QConstructor × SemTy.Type_Constructor × SemTy.TypeScheme)
 abbrev DE₂ : Type := Env Names.QVariable (Names.QVariable × SemTy.Type_Constructor × LE)
 
+/--
+This function is defined in Fig. 14 as:
+- `constrs(DE,χ) = {K | K : ⟨K, χ', σ⟩ ∈ DE ∧ χ' = χ}`
+-/
 def constrs (de : DE₁)(χ : SemTy.Type_Constructor) : List Names.QConstructor :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
+/--
+This function is defined in Fig. 14 as:
+- `fields(DE,χ) = {x | x : ⟨x, χ',LE⟩ ∈ DE ∧ χ' = χ}`
+-/
 def fields (de : DE₂)(χ : SemTy.Type_Constructor) : List Names.QVariable :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
