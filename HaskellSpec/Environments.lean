@@ -42,8 +42,8 @@ class OPlus (m : Type) where
 notation  "《oplus》" e₁ "⊞" e₂ "≡" e₃ "▪"=> OPlus.oplus e₁ e₂ e₃
 notation  "《oplus*》⊞{" es "}≡" e "▪"=> OPlus.oplus_many es e
 
--- ⊕ from Section 2.7 as a ternary relation
--- asserts that the environments have no overlapping domains
+/-- ⊕ from Section 2.7 as a ternary relation
+asserts that the environments have no overlapping domains -/
 inductive oplus_env : Env k v -> Env k v -> Env k v -> Prop where
 
   | Nil :
