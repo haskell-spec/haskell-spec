@@ -115,9 +115,12 @@ mutual
 
     | PLAB :
       ge = ⟨ce,te,⟨de₁,de₂⟩⟩ →
-      《pats》ge,ie ⊢ _ ⇝ _ ፥ _ , _ ▪ →
-      -------------------------------
-      《pat》ge,ie ⊢ Source.Pattern.constructor_labelled c lps ⇝ Target.Pattern.constructor_labelled c lps' ፥ _ , _ ▪
+      《pats》ge,ie ⊢ ps ⇝ ps' ፥ ves , τs ▪ →
+      ⟨K,⟨K,χ,σ⟩⟩ ∈ de₁ →
+      τ = SemTy.type_apps (SemTy.TypeS.TypeConstructor χ) τs' →
+      《oplus*》⊞{ ves }≡ ve_res ▪ →
+      ---------------------------------------------------------------------------------------------------------------
+      《pat》ge,ie ⊢ Source.Pattern.constructor_labelled c lps ⇝ Target.Pattern.constructor_labelled c lps' ፥ ve_res , τ ▪
 
     | PCHAR :
       -------------------------------------------------------------------------------------------------------
