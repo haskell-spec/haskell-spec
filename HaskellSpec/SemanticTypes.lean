@@ -173,4 +173,6 @@ instance instSubstituteTypeS : Substitute TypeS where
 instance instSubstituteContext : Substitute Context where
   substitute subst := List.map (Prod.map id (Substitute.substitute subst))
 
+instance instSubstituteList [Substitute α] : Substitute (List α) where
+  substitute subst xs := xs.map (λ x => Substitute.substitute subst x)
 end SemTy

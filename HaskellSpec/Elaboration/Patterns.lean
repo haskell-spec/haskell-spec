@@ -96,18 +96,21 @@ mutual
       《pat》ge,ie ⊢ Source.Pattern.lazy p ⇝ Target.Pattern.lazy p' ፥ ve, τ ▪
 
     | PWILD :
-      --------------------------------------------------------------
+      --------------------------------------------------------------------------
       《pat》ge,ie ⊢ Source.Pattern.wildcard ⇝ Target.Pattern.wildcard ፥ [], τ ▪
 
     | PCON :
       ge = ⟨ce,te,⟨de₁,de₂⟩⟩ →
       ⟨K,⟨K,χ,SemTy.TypeScheme.Forall αs θ τ_fun⟩⟩ ∈ de₁ →
       τ_fun = SemTy.type_funs τs (SemTy.type_apps_vars (SemTy.TypeS.TypeConstructor χ) αs) →
-      《pats》ge,ie ⊢ ps ⇝ ps' ፥ ves , τs ▪ →
+      -- subst = [τ'₁/α₁,…,τ'ₙ/αₙ]
+      Env.dom subst = αs →
+      Env.rng subst = τs' →
+      《pats》ge,ie ⊢ ps ⇝ ps' ፥ ves , (SemTy.Substitute.substitute subst τs) ▪ →
       《oplus*》⊞{ ves }≡ ve_res ▪ →
-      《dict》ie ⊢ e ፥ θ ▪ → -- TODO: subst for datatype contexts
+      《dict》ie ⊢ e ፥ SemTy.Substitute.substitute subst θ ▪ →
       τ = SemTy.type_apps (SemTy.TypeS.TypeConstructor χ) τs' →
-      ------------------------------------------------------------
+      ------------------------------------------------------------------------------------------------
       《pat》ge,ie ⊢ Source.Pattern.constructor c ps ⇝ Target.Pattern.constructor c ps' ፥ ve_res , τ ▪
 
     | PLAB :
