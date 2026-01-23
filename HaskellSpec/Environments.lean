@@ -87,10 +87,32 @@ instance instOplusTildeEnv : OplusTilde (Env name info) where
   oplustilde env₁ env₂ := List.append env₁ env₂
 
 class Qualify (env : Type) where
-  qualify  (m : Module_Name) (e : env) : env
+  qualify  (m : Names.Module_Name) (e : env) : env
 
-instance instQualifyEnv : Qualify (Env name info) where
-  qualify := sorry
+instance instQualifyEnv [Qualify name] : Qualify (Env name info) where
+  qualify m env := env.map (λ ⟨name, info⟩ => ⟨Qualify.qualify m name, info⟩)
+
+instance instQualifyQClassName : Qualify Names.QClassName where
+  qualify m name := match name with
+    | Names.QClassName.Qualified _ c => Names.QClassName.Qualified m c
+    | Names.QClassName.Unqualified c => Names.QClassName.Qualified m c
+
+instance instQualifyQType_Name : Qualify Names.QType_Name where
+  qualify m name := match name with
+    | Names.QType_Name.Qualified _ t => Names.QType_Name.Qualified m t
+    | Names.QType_Name.Unqualified t => Names.QType_Name.Qualified m t
+    | Names.QType_Name.Special s => Names.QType_Name.Special s
+
+instance instQualifyQConstructor : Qualify Names.QConstructor where
+  qualify m name := match name with
+    | Names.QConstructor.Qualified _ c => Names.QConstructor.Qualified m c
+    | Names.QConstructor.Unqualified c => Names.QConstructor.Qualified m c
+    | Names.QConstructor.Special s => Names.QConstructor.Special s
+
+instance instQualifyQVariable : Qualify Names.QVariable where
+  qualify m var := match var with
+    | Names.QVariable.Qualified _ v => Names.QVariable.Qualified m v
+    | Names.QVariable.Unqualified v => Names.QVariable.Qualified m v
 
 def unQual [Names.Unqual name] : Env name info -> Env name info :=
   List.map (λ(n, i) => (Names.Unqual.unQual n, i))
@@ -166,6 +188,15 @@ instance oplus_te_inst : OPlus TE where
   oplus_many := λ te_in te_out => OPlus.oplus_many (List.map (λ x => x.te₁) te_in) te_out.te₁ ∧
                                   OPlus.oplus_many (List.map (λ x => x.te₂) te_in) te_out.te₂
 
+instance instQualifyTE₂ : Qualify TE₂ where
+  qualify _ env := env -- Type variables cannot be qualified.
+
+instance instQualifyTE : Qualify TE where
+  qualify m te :=
+    { te₁ := Qualify.qualify m te.te₁
+      te₂ := Qualify.qualify m te.te₂
+    }
+
 /-
 ## Instance Environment
 -/
@@ -237,8 +268,7 @@ structure CEEntry : Type where
   ie : IE
 
 @[reducible]
-def CE := List (Names.QClassName × CEEntry)
-
+def CE := Env Names.QClassName CEEntry
 
 /--
 Cp. Fig 16
@@ -296,6 +326,13 @@ instance instJustQsDE : JustQs DE where
     { de₁ := JustQs.justQs de.de₁
       de₂ := JustQs.justQs de.de₂
     }
+
+instance instQualifyDE : Qualify DE where
+  qualify m de :=
+    { de₁ := Qualify.qualify m de.de₁
+      de₂ := Qualify.qualify m de.de₂
+    }
+
 
 def DE_union (de₁ de₂ : DE) : DE :=
   { de₁ := de₁.de₁ ++ de₂.de₁
@@ -469,7 +506,12 @@ instance instOplusTildeEE : OplusTilde EE where
     }
 
 instance instQualifyEE : Qualify EE where
-  qualify := sorry
+  qualify m ee :=
+    { ce := Qualify.qualify m ee.ce
+      te := Qualify.qualify m ee.te
+      de := Qualify.qualify m ee.de
+      ve := Qualify.qualify m ee.ve
+    }
 
 /--
 ### Module Environment
