@@ -366,8 +366,17 @@ Cp. section 2.7.5
 def VE : Type :=
   Env Names.QVariable VE_Item
 
+/--
+Defined in Fig.14 as:
+```text
+ops(VE,Γ) = { x | x : ⟨x, ∀ α.Γ' α =>c σ ∈ VE ∧ Γ = Γ'}
+```
+-/
 def ops (ve : VE)(Γ : SemTy.SClass_Name) : List Names.QVariable :=
-  sorry
+  let filtered := ve.filter (λ ⟨_,item ⟩ => match item with
+    | VE_Item.Ordinary _ _=> false
+    | VE_Item.Class _ (SemTy.ClassTypeScheme.Forall _ Γ' _)=> Γ == Γ')
+  filtered.map (λ ⟨x,_⟩ => x)
 
 /-
 ### Kind Environment
