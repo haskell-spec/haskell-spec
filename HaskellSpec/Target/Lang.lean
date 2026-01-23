@@ -73,7 +73,7 @@ mutual
     | var : Names.Variable → SemTy.TypeScheme →  Pattern
     | constructor : Names.QConstructor → List Pattern → Pattern
     | constructor_labelled : Names.QConstructor → List (Names.Variable × Pattern) → Pattern
-    | as : Names.QVariable → SemTy.TypeScheme → Pattern → Pattern
+    | as : Names.Variable → SemTy.TypeScheme → Pattern → Pattern
     | lazy : Pattern → Pattern
     | wildcard : Pattern
     | exp : Expression → Pattern

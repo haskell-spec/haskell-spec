@@ -2,11 +2,7 @@ import HaskellSpec.Target.Lang
 import HaskellSpec.Prelude
 import HaskellSpec.Elaboration.Literals
 import HaskellSpec.Source.Patterns
-
-def unqual_var (var : Names.QVariable) : Names.Variable :=
-  match var with
-    | (Names.QVariable.Qualified _m x) => x
-    | (Names.QVariable.Unqualified x) => x
+import HaskellSpec.Names
 
 /- Applying typeclass methods to their type, dictionary, and term arguments. -/
 
@@ -56,6 +52,13 @@ GE, IE ⊢ p ⇝ p : VE, τ
 -/
 
 mutual
+  /--
+  This judgement elaborates a pattern from the source language to a pattern from
+  the target language and additionally yields:
+  - A variable environment which gives the types of the variables which occur
+    in the pattern.
+  - The type that the pattern matches against.
+  -/
   inductive pat : Env.GE
                 → Env.IE
                 → Source.Pattern
@@ -63,15 +66,25 @@ mutual
                 → Env.VE
                 → SemTy.TypeS
                 → Prop where
+      /--
+      Faxen adds the following note for this rule at the beginning of section 9:
+
+      "For the benefit of method bindings in instance declarations, the abstract
+       syntax of patterns and the PVAR rule allow single variables to be qualified.
+       The translated pattern is still unqualified but the returned environment
+       associates the type with the qualified name since it is checked against the
+       (possibly imported) variable in the INST rule [..]. Variables also occur in
+       as-patterns `v@p` [..] where only unqualified variables are allowed."
+      -/
     | PVAR :
       σ = (SemTy.TypeScheme.Forall [] [] τ) →
-      -----------------------------------------------------------------------------------------------------------------
-      《pat》ge,ie ⊢ Source.Pattern.var x ⇝ Target.Pattern.var (unqual_var x) σ ፥ [(x, Env.VE_Item.Ordinary x σ)] , τ ▪
+      -----------------------------------------------------------------------------------------------------------------------
+      《pat》ge,ie ⊢ Source.Pattern.var x ⇝ Target.Pattern.var (Names.unqual_var x) σ ፥ [(x, Env.VE_Item.Ordinary x σ)] , τ ▪
 
     | PAS :
       《pat》ge,ie ⊢ p ⇝ p' ፥ veₚ , τ ▪ →
       σ = SemTy.TypeScheme.Forall [] [] τ →
-      《oplus》veₚ ⊞ [⟨v,Env.VE_Item.Ordinary v σ⟩] ≡ ve_res ▪ →
+      《oplus》veₚ ⊞ [⟨Names.QVariable.Unqualified v,Env.VE_Item.Ordinary (Names.QVariable.Unqualified v) σ⟩] ≡ ve_res ▪ →
       -----------
       《pat》ge,ie ⊢ Source.Pattern.as v p ⇝ Target.Pattern.as v σ p' ፥ ve_res , τ ▪
 

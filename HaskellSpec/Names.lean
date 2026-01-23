@@ -211,6 +211,11 @@ instance instUnqualQConstructor : Unqual QConstructor where
     | QConstructor.Qualified _ c => QConstructor.Unqualified c
     | QConstructor.Special s => QConstructor.Special s
 
+def unqual_var (var : Names.QVariable) : Names.Variable :=
+  match var with
+    | (Names.QVariable.Qualified _m x) => x
+    | (Names.QVariable.Unqualified x) => x
+
 /--
 This class needed for a polymorphic implementation of
 the `justQs` function, defined in section 2.7.
