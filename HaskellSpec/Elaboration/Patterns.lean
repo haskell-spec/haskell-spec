@@ -101,9 +101,12 @@ mutual
 
     | PCON :
       ge = ⟨ce,te,⟨de₁,de₂⟩⟩ →
+      -- The following two premisses say that the constructor `K` has the type:
+      -- `∀ α₁ … αₖ. θ ⇒ τ₁ → … → τₙ → χ α₁ … αₖ`
+      -- in the environment. The `θ` comes from datatype contexts.
       ⟨K,⟨K,χ,SemTy.TypeScheme.Forall αs θ τ_fun⟩⟩ ∈ de₁ →
       τ_fun = SemTy.type_funs τs (SemTy.type_apps_vars (SemTy.TypeS.TypeConstructor χ) αs) →
-      -- subst = [τ'₁/α₁,…,τ'ₙ/αₙ]
+      -- The following two premisses say that `subst = [τ'₁/α₁,…,τ'ₙ/αₙ]`
       Env.dom subst = αs →
       Env.rng subst = τs' →
       《pats》ge,ie ⊢ ps ⇝ ps' ፥ ves , (SemTy.Substitute.substitute subst τs) ▪ →
