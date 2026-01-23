@@ -101,7 +101,8 @@ mutual
 
     | PCON :
       ge = ⟨ce,te,⟨de₁,de₂⟩⟩ →
-      ⟨K,⟨K,χ,SemTy.TypeScheme.Forall αs θ _⟩⟩ ∈ de₁ →
+      ⟨K,⟨K,χ,SemTy.TypeScheme.Forall αs θ τ_fun⟩⟩ ∈ de₁ →
+      τ_fun = SemTy.type_funs τs (SemTy.type_apps_vars (SemTy.TypeS.TypeConstructor χ) αs) →
       《pats》ge,ie ⊢ ps ⇝ ps' ፥ ves , τs ▪ →
       《oplus*》⊞{ ves }≡ ve_res ▪ →
       《dict》ie ⊢ e ፥ θ ▪ → -- TODO: subst for datatype contexts

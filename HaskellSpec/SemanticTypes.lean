@@ -90,6 +90,29 @@ def type_apps(τ : TypeS)(τs : List TypeS) : TypeS :=
   τs.foldl TypeS.App τ
 
 /--
+Builds the type `τ α₁ … αₙ`
+-/
+def type_apps_vars (τ : TypeS)(αs : List Type_Variable) : TypeS :=
+  type_apps τ (αs.map (λ α => TypeS.Variable α))
+
+/--
+Builds the type `τ₁ → τ₂`
+-/
+def type_fun(τ₁ τ₂ : TypeS) : TypeS :=
+  let funkind : Kind :=  Kind.Fun Kind.Star (Kind.Fun Kind.Star Kind.Star)
+  let funtype : TypeS := TypeS.TypeConstructor (Type_Constructor.Mk (Names.OType_Name.Special Names.Special_Type_Constructor.Fun) funkind)
+  TypeS.App (TypeS.App funtype τ₁) τ₂
+
+/--
+Builds the type `τ₁ → … → τₙ → τ`
+-/
+def type_funs (τs : List TypeS)(τ : TypeS) : TypeS :=
+  match τs with
+    | List.nil => τ
+    | List.cons τ' τs => type_fun τ' (type_funs τs τ)
+
+
+/--
 ```text
 θ ∈ Context → (Γ₁ τ₁, … , Γₙ τₙ)
 ```
