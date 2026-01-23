@@ -286,8 +286,7 @@ def CE_init : CE := []
 abbrev UE : Type := Env Names.QVariable SemTy.TypeS
 
 instance instSubstituteUE : SemTy.Substitute UE where
-  substitute := sorry
-
+  substitute subst env := env.map (λ ⟨v,ty⟩ => ⟨v, SemTy.Substitute.substitute subst ty⟩)
 
 /-
 ### Label Environment
