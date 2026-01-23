@@ -6,30 +6,30 @@ import HaskellSpec.Names
 
 /- Applying typeclass methods to their type, dictionary, and term arguments. -/
 
-/- Prelude.== τ ed e -/
+/-- Helper function to construct the target expression `Prelude.== τ ed e` -/
 def apply_equals : SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression := λ τ ed e =>
   let e' := Target.Expression.typ_app (Target.Expression.var Prelude.equals) (NonEmpty.mk τ [])
   Target.apps e' [ed, e]
 
-/- Prelude!enumFromThenTo τ e e1' e2' e3' -/
+/-- Helper function to construct the target expression `Prelude!enumFromThenTo τ e e1' e2' e3'` -/
 def apply_enumFromThenTo : SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression  → Target.Expression → Target.Expression :=
   λ τ e e1' e2' e3' =>
   let e' := Target.Expression.typ_app (Target.Expression.var Prelude.enum_from_then_to) (NonEmpty.mk τ [])
   Target.apps e' [e, e1', e2', e3']
 
-/- Prelude!enumFromTo τ e e1' e2' -/
+/-- Helper function to construct the target expression `Prelude!enumFromTo τ e e1' e2'` -/
 def apply_enumFromTo : SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression → Target.Expression :=
   λ τ e e1' e2' =>
   let e' := Target.Expression.typ_app (Target.Expression.var Prelude.enum_from_to) (NonEmpty.mk τ [])
   Target.apps e' [e, e1', e2']
 
-/- Prelude!enumFromThen τ e e1' e2' -/
+/-- Helper function to construct the target expression `Prelude!enumFromThen τ e e1' e2'` -/
 def apply_enumFromThen : SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression → Target.Expression :=
   λ τ e e1' e2' =>
   let e' := Target.Expression.typ_app (Target.Expression.var Prelude.enum_from_then) (NonEmpty.mk τ [])
   Target.apps e' [e, e1', e2']
 
-/- Prelude!enumFrom τ e e1' -/
+/-- Helper function to construct the target expression `Prelude!enumFrom τ e e1'` -/
 def apply_enumFrom : SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression :=
   λ τ e e1' =>
   let e' := Target.Expression.typ_app (Target.Expression.var Prelude.enum_from) (NonEmpty.mk τ [])
