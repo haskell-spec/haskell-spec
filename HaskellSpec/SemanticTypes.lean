@@ -18,8 +18,13 @@ inductive Kind : Type where
   | Fun : Kind → Kind → Kind
   deriving BEq, Repr
 
-def kind_fun_list (kes : List Kind) : Kind := sorry
-
+/--
+Given a list `κ₁,…,κₙ` yields the kind `κ₁ → … → κₙ → *`.
+-/
+def kind_fun_list (κs : List Kind) : Kind :=
+  match κs with
+  | List.nil => Kind.Star
+  | List.cons κ κs => Kind.Fun κ (kind_fun_list κs)
 
 export Kind (Star Fun)
 
