@@ -42,8 +42,8 @@ class OPlus (m : Type) where
 notation  "《oplus》" e₁ "⊞" e₂ "≡" e₃ "▪"=> OPlus.oplus e₁ e₂ e₃
 notation  "《oplus*》⊞{" es "}≡" e "▪"=> OPlus.oplus_many es e
 
--- ⊕ from Section 2.7 as a ternary relation
--- asserts that the environments have no overlapping domains
+/-- ⊕ from Section 2.7 as a ternary relation
+asserts that the environments have no overlapping domains -/
 inductive oplus_env : Env k v -> Env k v -> Env k v -> Prop where
 
   | Nil :
@@ -87,10 +87,32 @@ instance instOplusTildeEnv : OplusTilde (Env name info) where
   oplustilde env₁ env₂ := List.append env₁ env₂
 
 class Qualify (env : Type) where
-  qualify  (m : Module_Name) (e : env) : env
+  qualify  (m : Names.Module_Name) (e : env) : env
 
-instance instQualifyEnv : Qualify (Env name info) where
-  qualify := sorry
+instance instQualifyEnv [Qualify name] : Qualify (Env name info) where
+  qualify m env := env.map (λ ⟨name, info⟩ => ⟨Qualify.qualify m name, info⟩)
+
+instance instQualifyQClassName : Qualify Names.QClassName where
+  qualify m name := match name with
+    | Names.QClassName.Qualified _ c => Names.QClassName.Qualified m c
+    | Names.QClassName.Unqualified c => Names.QClassName.Qualified m c
+
+instance instQualifyQType_Name : Qualify Names.QType_Name where
+  qualify m name := match name with
+    | Names.QType_Name.Qualified _ t => Names.QType_Name.Qualified m t
+    | Names.QType_Name.Unqualified t => Names.QType_Name.Qualified m t
+    | Names.QType_Name.Special s => Names.QType_Name.Special s
+
+instance instQualifyQConstructor : Qualify Names.QConstructor where
+  qualify m name := match name with
+    | Names.QConstructor.Qualified _ c => Names.QConstructor.Qualified m c
+    | Names.QConstructor.Unqualified c => Names.QConstructor.Qualified m c
+    | Names.QConstructor.Special s => Names.QConstructor.Special s
+
+instance instQualifyQVariable : Qualify Names.QVariable where
+  qualify m var := match var with
+    | Names.QVariable.Qualified _ v => Names.QVariable.Qualified m v
+    | Names.QVariable.Unqualified v => Names.QVariable.Qualified m v
 
 def unQual [Names.Unqual name] : Env name info -> Env name info :=
   List.map (λ(n, i) => (Names.Unqual.unQual n, i))
@@ -102,9 +124,16 @@ instance instJustQsEnv [Names.IsQual name] : JustQs (Env name info) where
   justQs := List.filter (Names.IsQual.isQual ∘ Prod.fst)
 
 
-def justSingle [BEq name] [BEq info] : Env name info -> Env name info :=
-  sorry -- TODO My first attempt at defining this did not satisfy the
-        -- termination checker.
+/--
+This function is defined at the beginning of section 2.7.
+It retains only information about names with a single entry.
+-/
+def justSingle [BEq name] [BEq info] (env : Env name info) : Env name info :=
+  env.filter (λ ⟨name,_⟩ => (env.filter (λ ⟨name',_⟩ => name == name')).length == 1)
+
+#guard justSingle [("a", ()), ("a", ())] == []
+#guard justSingle [("a", ()), ("b", ())] == [("a", ()),("b", ())]
+#guard justSingle [("a", ()), ("b", ()), ("b", ())] == [("a", ())]
 
 inductive TE_Item : Type where
   | DataType : SemTy.Type_Constructor →  TE_Item
@@ -158,6 +187,15 @@ instance oplus_te_inst : OPlus TE where
                                   OPlus.oplus te₁.te₂ te₂.te₂ te_output.te₂
   oplus_many := λ te_in te_out => OPlus.oplus_many (List.map (λ x => x.te₁) te_in) te_out.te₁ ∧
                                   OPlus.oplus_many (List.map (λ x => x.te₂) te_in) te_out.te₂
+
+instance instQualifyTE₂ : Qualify TE₂ where
+  qualify _ env := env -- Type variables cannot be qualified.
+
+instance instQualifyTE : Qualify TE where
+  qualify m te :=
+    { te₁ := Qualify.qualify m te.te₁
+      te₂ := Qualify.qualify m te.te₂
+    }
 
 /-
 ## Instance Environment
@@ -230,8 +268,7 @@ structure CEEntry : Type where
   ie : IE
 
 @[reducible]
-def CE := List (Names.QClassName × CEEntry)
-
+def CE := Env Names.QClassName CEEntry
 
 /--
 Cp. Fig 16
@@ -249,8 +286,7 @@ def CE_init : CE := []
 abbrev UE : Type := Env Names.QVariable SemTy.TypeS
 
 instance instSubstituteUE : SemTy.Substitute UE where
-  substitute := sorry
-
+  substitute subst env := env.map (λ ⟨v,ty⟩ => ⟨v, SemTy.Substitute.substitute subst ty⟩)
 
 /-
 ### Label Environment
@@ -269,9 +305,17 @@ abbrev LE : Type := Env Names.QConstructor LabelInfo
 abbrev DE₁ : Type := Env Names.QConstructor (Names.QConstructor × SemTy.Type_Constructor × SemTy.TypeScheme)
 abbrev DE₂ : Type := Env Names.QVariable (Names.QVariable × SemTy.Type_Constructor × LE)
 
+/--
+This function is defined in Fig. 14 as:
+- `constrs(DE,χ) = {K | K : ⟨K, χ', σ⟩ ∈ DE ∧ χ' = χ}`
+-/
 def constrs (de : DE₁)(χ : SemTy.Type_Constructor) : List Names.QConstructor :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
+/--
+This function is defined in Fig. 14 as:
+- `fields(DE,χ) = {x | x : ⟨x, χ',LE⟩ ∈ DE ∧ χ' = χ}`
+-/
 def fields (de : DE₂)(χ : SemTy.Type_Constructor) : List Names.QVariable :=
   List.map Prod.fst (List.filter (λ ⟨_,info⟩ => info.snd.fst == χ) de)
 
@@ -289,6 +333,13 @@ instance instJustQsDE : JustQs DE where
     { de₁ := JustQs.justQs de.de₁
       de₂ := JustQs.justQs de.de₂
     }
+
+instance instQualifyDE : Qualify DE where
+  qualify m de :=
+    { de₁ := Qualify.qualify m de.de₁
+      de₂ := Qualify.qualify m de.de₂
+    }
+
 
 def DE_union (de₁ de₂ : DE) : DE :=
   { de₁ := de₁.de₁ ++ de₂.de₁
@@ -323,8 +374,17 @@ Cp. section 2.7.5
 def VE : Type :=
   Env Names.QVariable VE_Item
 
+/--
+Defined in Fig.14 as:
+```text
+ops(VE,Γ) = { x | x : ⟨x, ∀ α.Γ' α =>c σ ∈ VE ∧ Γ = Γ'}
+```
+-/
 def ops (ve : VE)(Γ : SemTy.SClass_Name) : List Names.QVariable :=
-  sorry
+  let filtered := ve.filter (λ ⟨_,item ⟩ => match item with
+    | VE_Item.Ordinary _ _=> false
+    | VE_Item.Class _ (SemTy.ClassTypeScheme.Forall _ Γ' _)=> Γ == Γ')
+  filtered.map (λ ⟨x,_⟩ => x)
 
 /-
 ### Kind Environment
@@ -462,7 +522,12 @@ instance instOplusTildeEE : OplusTilde EE where
     }
 
 instance instQualifyEE : Qualify EE where
-  qualify := sorry
+  qualify m ee :=
+    { ce := Qualify.qualify m ee.ce
+      te := Qualify.qualify m ee.te
+      de := Qualify.qualify m ee.de
+      ve := Qualify.qualify m ee.ve
+    }
 
 /--
 ### Module Environment

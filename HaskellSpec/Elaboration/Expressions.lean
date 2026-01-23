@@ -12,30 +12,6 @@ import HaskellSpec.Elaboration.Types
 import HaskellSpec.NonEmpty
 import HaskellSpec.Prelude
 
-set_option quotPrecheck false in
-set_option hygiene false in
-notation  "《lcon》" ie "," φ "⊢" τ_old "," ue "," τ_new "▪" => lcon ie φ τ_old ue τ_new
-
-/--
-Cp. Fig 22
-```text
-IE, φ ⊢ τ_old, UE, τ_new
-```
--/
-inductive lcon : Env.IE
-               → Env.LabelInfo
-               → SemTy.TypeS
-               → Env.UE
-               → SemTy.TypeS
-               → Prop where
-  | LCON :
-    Env.dom τsForαs = αs →
-    Env.dom τ'sForαs = αs →
-     SemTy.Substitute.substitute τsForαs ue = Env.oplusarrow (SemTy.Substitute.substitute τ'sForαs ue) ue' →
-    《dict》ie ⊢ _ ፥ SemTy.Substitute.substitute τsForαs θ  ▪ →
-    《dict》ie ⊢ _ ፥ SemTy.Substitute.substitute τ'sForαs θ ▪ →
-    ------------------------------------------------------
-    《lcon》ie , Env.LabelInfo.mk αs θ ue τ ⊢ SemTy.Substitute.substitute τsForαs τ , ue' , SemTy.Substitute.substitute τ'sForαs τ ▪
 
 /- Prelude!(>>) τ ed ed τ₁ τ₂ e₁ e₂ -/
 def apply_sequence : SemTy.TypeS → Target.Expression → SemTy.TypeS → SemTy.TypeS → Target.Expression → Target.Expression → Target.Expression :=

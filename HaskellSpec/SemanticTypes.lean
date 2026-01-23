@@ -18,8 +18,13 @@ inductive Kind : Type where
   | Fun : Kind → Kind → Kind
   deriving BEq, Repr
 
-def kind_fun_list (kes : List Kind) : Kind := sorry
-
+/--
+Given a list `κ₁,…,κₙ` yields the kind `κ₁ → … → κₙ → *`.
+-/
+def kind_fun_list (κs : List Kind) : Kind :=
+  match κs with
+  | List.nil => Kind.Star
+  | List.cons κ κs => Kind.Fun κ (kind_fun_list κs)
 
 export Kind (Star Fun)
 
@@ -85,6 +90,29 @@ def type_apps(τ : TypeS)(τs : List TypeS) : TypeS :=
   τs.foldl TypeS.App τ
 
 /--
+Builds the type `τ α₁ … αₙ`
+-/
+def type_apps_vars (τ : TypeS)(αs : List Type_Variable) : TypeS :=
+  type_apps τ (αs.map (λ α => TypeS.Variable α))
+
+/--
+Builds the type `τ₁ → τ₂`
+-/
+def type_fun(τ₁ τ₂ : TypeS) : TypeS :=
+  let funkind : Kind :=  Kind.Fun Kind.Star (Kind.Fun Kind.Star Kind.Star)
+  let funtype : TypeS := TypeS.TypeConstructor (Type_Constructor.Mk (Names.OType_Name.Special Names.Special_Type_Constructor.Fun) funkind)
+  TypeS.App (TypeS.App funtype τ₁) τ₂
+
+/--
+Builds the type `τ₁ → … → τₙ → τ`
+-/
+def type_funs (τs : List TypeS)(τ : TypeS) : TypeS :=
+  match τs with
+    | List.nil => τ
+    | List.cons τ' τs => type_fun τ' (type_funs τs τ)
+
+
+/--
 ```text
 θ ∈ Context → (Γ₁ τ₁, … , Γₙ τₙ)
 ```
@@ -145,4 +173,6 @@ instance instSubstituteTypeS : Substitute TypeS where
 instance instSubstituteContext : Substitute Context where
   substitute subst := List.map (Prod.map id (Substitute.substitute subst))
 
+instance instSubstituteList [Substitute α] : Substitute (List α) where
+  substitute subst xs := xs.map (λ x => Substitute.substitute subst x)
 end SemTy
