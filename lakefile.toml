@@ -12,4 +12,4 @@ root = "Main"
 [[require]]
 name = "veriflex"
 git = "https://github.com/haskell-spec/veriflex.git"
-rev = "07b968faf0c018fccc1faa1dec46a059ac773a0a"
+rev = "c43a469e941b4cf1374396e8cf2b9da69023ced9"
